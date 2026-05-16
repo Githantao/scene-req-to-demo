@@ -34,6 +34,7 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
 .diagram-box{overflow:auto;background:#fff;border-radius:8px;border:1px solid var(--border);padding:16px;min-height:200px}.diagram-box svg{max-width:100%;height:auto}
 .merr{border:1px solid #f5c6cb;background:#fce8e6;border-radius:8px;padding:12px}.merr-t{font-size:14px;font-weight:600;color:#c5221f;margin:0 0 8px}.merr-d{font-size:12px;color:#c5221f;white-space:pre-wrap;margin:0}
 .code-editor{margin-top:12px}.editor-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}.editor-label{font-size:11px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:.5px}.editor-actions{display:flex;align-items:center;gap:6px}.editor-hint{font-size:11px;color:var(--primary);font-style:italic}.editor-textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:#1e1e1e;color:#d4d4d4;font-family:'SF Mono','Menlo','Monaco','Courier New',monospace;font-size:12px;line-height:1.5;resize:vertical;min-height:80px;tab-size:2}.editor-textarea:focus{outline:none;border-color:var(--primary)}
+.diagram-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:var(--primary);color:#fff;margin-left:6px;vertical-align:middle;text-transform:uppercase;letter-spacing:.3px}
 .empty-msg{font-size:13px;color:var(--text-secondary);font-style:italic}
 .load-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000}.load-card{background:var(--surface);border-radius:12px;padding:32px;max-width:420px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}.load-spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}.load-h{font-size:16px;font-weight:600;margin:0 0 16px}.pb{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin-bottom:12px}.pb-fill{height:100%;background:var(--primary);border-radius:3px;transition:width .3s ease}.load-t{font-size:13px;color:var(--text-secondary);margin:0 0 8px}
 .hist-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:900;display:flex;justify-content:flex-end}.hist-panel{width:360px;max-width:90vw;background:var(--surface);height:100%;display:flex;flex-direction:column;box-shadow:-4px 0 20px rgba(0,0,0,.1)}.hist-h{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}.hist-h h2{font-size:16px;font-weight:600;margin:0}.hist-actions{display:flex;gap:8px}.hist-body{flex:1;overflow-y:auto;padding:12px}.hist-item{position:relative;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all .15s}.hist-item:hover{border-color:var(--primary);background:var(--bg)}.hist-ih{display:flex;align-items:center;gap:8px;margin-bottom:4px}.hist-it{font-size:14px;font-weight:600}.hist-im{font-size:11px;color:var(--primary);background:var(--primary-alpha);padding:1px 6px;border-radius:3px}.hist-is{font-size:12px;color:var(--text-secondary);margin:4px 0;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hist-itime{font-size:11px;color:var(--text-secondary);opacity:.7}.hist-del{position:absolute;top:8px;right:8px;background:none;border:none;font-size:14px;cursor:pointer;opacity:0;transition:opacity .15s;padding:4px}.hist-item:hover .hist-del{opacity:.5}.hist-item:hover .hist-del:hover{opacity:1}.hist-empty{text-align:center;color:var(--text-secondary);font-size:14px;margin-top:40px}
@@ -197,7 +198,9 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
             </div>
             <div class="split-div"></div>
             <div class="split-pane">
-              <div class="sec-h" style="margin-bottom:12px">系统流程图</div>
+              <div class="sec-h" style="margin-bottom:12px">系统流程图
+                <span v-if="result.requirements.diagramType" class="diagram-badge">{{ diagramLabel(result.requirements.diagramType) }}</span>
+              </div>
               <div v-if="mermaidError" class="merr"><p class="merr-t">Mermaid 渲染错误</p><pre class="merr-d">{{ mermaidError }}</pre></div>
               <div v-else-if="result.mermaidCode" class="diagram-box" v-html="mermaidSvg"></div>
               <p v-else class="empty-msg">无流程图</p>
@@ -282,7 +285,7 @@ const MODEL_LIBS = {
 const STORAGE_KEY = 'scene-to-req-history';
 const MAX_HISTORY = 50;
 
-const SYSTEM_PROMPT = '你是一个资深的系统需求分析师。你的任务是根据用户描述的自然语言场景，提炼出严格、完整的系统需求，并生成对应的 Mermaid 流程图。\n\n你必须严格遵守以下 JSON 输出格式，不要输出任何多余的解释：\n\n{\n  "requirements": {\n    "title": "系统名称（从场景中提取）",\n    "layers": {\n      "business": { "goal": "一句话描述业务目标", "value": "给组织/业务带来的价值" },\n      "user": { "scenario": "典型用户使用场景描述", "painPoints": ["用户痛点列表"] },\n      "system": { "summary": "系统在整体方案中承担的职责概述" }\n    },\n    "systemBoundary": "系统边界描述",\n    "stakeholders": ["干系人列表"],\n    "functionalRequirements": [\n      { "id": "FR-1", "name": "功能名称", "description": "详细描述（必须可测试）", "priority": "high|medium|low" }\n    ],\n    "dataFlows": [\n      { "from": "数据来源", "to": "数据目标", "data": "数据描述", "type": "input|output|storage" }\n    ],\n    "nonFunctionalRequirements": ["区分硬性约束与假设"]\n  },\n  "mermaidCode": "flowchart TD\\n  subgraph input[输入阶段]\\n    A[用户提交请求]\\n  end\\n  subgraph process[处理阶段]\\n    B[验证数据] --> C{是否合法}\\n    C -->|是| D[处理业务逻辑]\\n    C -->|否| E[返回错误]\\n  end\\n  subgraph output[输出阶段]\\n    D --> F[返回结果]\\n  end"\n}\n\n需求分析规则：\n1. JSON 必须严格合法\n2. layers 字段必须包含 business（业务层）、user（用户层）、system（系统层）三层\n3. 区分"需要什么"和"怎么做"，需求描述只写"需要什么"\n4. 每条功能需求必须可测试\n5. functionalRequirements 至少 3 条，不多于 10 条\n6. 非功能性需求中标注硬性约束 vs 假设\n7. 所有描述使用中文\n\nMermaid 生成规则：\n1. 只使用 flowchart TD 或 flowchart LR\n2. 节点命名用中文 + emoji，3-5 个字\n3. 用 subgraph 分组，每组 3-7 个节点\n4. 决策点用菱形 {}，分支路径用 -->|标签|\n5. 每个子图用 emoji 前缀标识阶段\n6. 用 %% 注释说明复杂分支的业务含义';
+const SYSTEM_PROMPT = '你是一个资深的系统需求分析师 + Mermaid 图表专家。你的任务是根据用户描述的自然语言场景，提炼出严格、完整的系统需求，并生成最合适的 Mermaid 图表。\n\n输出格式：\n\n{\n  "requirements": {\n    "title": "系统名称",\n    "diagramType": "flowchart",\n    "layers": {\n      "business": { "goal": "业务目标", "value": "业务价值" },\n      "user": { "scenario": "用户场景", "painPoints": ["痛点"] },\n      "system": { "summary": "系统职责" }\n    },\n    "systemBoundary": "系统边界",\n    "stakeholders": ["干系人"],\n    "functionalRequirements": [\n      { "id": "FR-1", "name": "功能名", "description": "描述（必须可测试）", "priority": "high|medium|low" }\n    ],\n    "dataFlows": [\n      { "from": "来源", "to": "目标", "data": "数据", "type": "input|output|storage" }\n    ],\n    "nonFunctionalRequirements": ["硬性约束 / 假设"]\n  },\n  "mermaidCode": "..."\n}\n\n需求分析规则：\n1. JSON 必须严格合法\n2. layers 必须包含 business/user/system 三层\n3. 区分"需要什么"和"怎么做"\n4. 每条功能需求必须可测试\n5. functionalRequirements 至少 3 条，不多于 10 条\n6. nonFunctionalRequirements 中标注硬性约束 vs 假设\n7. diagramType 字段必须填写，见下方图表类型选择规则\n8. 所有描述使用中文\n\n图表类型选择规则（根据场景内容自动选择最合适的类型）：\n\n1. flowchart — 业务流程、工作流、决策树、用户操作路径、有明确步骤顺序的场景\n   语法：flowchart TD/LR，用 subgraph 分组，{} 菱形表示决策点\n   示例：\\nflowchart LR\\n  A[登录] --> B{验证}\\n  B -->|成功| C[首页]\\n  B -->|失败| D[错误提示]\n\n2. sequenceDiagram — API 交互、系统间通信、登录流程、多方协作、有时间顺序的消息传递\n   语法：sequenceDiagram，actor 表示用户，participant 表示系统，->> 实线请求，-->> 虚线返回\n   示例：\\nsequenceDiagram\\n  actor 用户\\n  participant 前端\\n  participant 后端\\n  用户->>前端: 提交表单\\n  前端->>后端: POST /api\\n  后端-->>前端: 返回结果\\n  前端-->>用户: 显示成功\n\n3. classDiagram — 系统架构、数据模型、类关系、面向对象设计、模块依赖\n   语法：classDiagram，<|-- 继承，*-- 组合，o-- 聚合，--> 关联\n   示例：\\nclassDiagram\\n  class 用户 {\\n    +id\\n    +登录()\\n  }\\n  class 订单 {\\n    +金额\\n    +支付()\\n  }\\n  用户 --> 订单\n\n4. stateDiagram-v2 — 状态机、生命周期、状态流转、工作流状态、审批流程\n   语法：stateDiagram-v2，[*] 开始/结束，--> 状态转换\\n  示例：\\nstateDiagram-v2\\n  [*] --> 待审核\\n  待审核 --> 通过\\n  待审核 --> 驳回\\n  通过 --> [*]\\n  驳回 --> 待审核\n\n5. erDiagram — 数据库设计、实体关系、数据表结构、字段定义\n   语法：erDiagram，||--o{ 一对多，||--|| 一对一，}o--|| 多对一\\n  示例：\\nerDiagram\\n  用户 ||--o{ 订单 : 下单\\n  订单 ||--|{ 订单项 : 包含\\n  商品 ||--o{ 订单项 : 被购买\n\n选择优先级：\n- 涉及多方交互、API 调用、消息传递 → sequenceDiagram\n- 涉及状态转换、审批流程、生命周期 → stateDiagram-v2\n- 涉及数据库、数据实体、字段定义 → erDiagram\n- 涉及类、模块、接口、继承关系 → classDiagram\n- 以上都不符合，或纯步骤流程 → flowchart\n\nMermaid 通用规则：\n1. 所有标签和描述使用中文\n2. 节点命名用中文 + emoji（3-5 字），如 📱用户端、⚙️处理中心、💾数据库\n3. 用 %% 注释说明复杂逻辑';
 
 const app = createApp({
   setup() {
@@ -428,6 +431,7 @@ const app = createApp({
         return {
           requirements: {
             title: p.requirements.title||'未命名系统',
+            diagramType: p.requirements.diagramType||'flowchart',
             layers: p.requirements.layers||null,
             systemBoundary: p.requirements.systemBoundary||'',
             stakeholders: Array.isArray(p.requirements.stakeholders)?p.requirements.stakeholders:[],
@@ -493,6 +497,11 @@ const app = createApp({
       const u=['B','KB','MB','GB'];
       const i=Math.min(Math.floor(Math.log(b)/Math.log(1024)),u.length-1);
       return (b/Math.pow(1024,i)).toFixed(i?1:0)+' '+u[i];
+    }
+
+    function diagramLabel(t) {
+      const labels = { flowchart:'流程图', sequenceDiagram:'时序图', classDiagram:'类图', 'stateDiagram-v2':'状态图', erDiagram:'ER图' };
+      return labels[t] || t;
     }
 
     // Watch editableCode for live re-render (debounced 600ms)
@@ -569,7 +578,7 @@ const app = createApp({
       loadModel, unloadModel, analyze,
       scanCache, clearModelCache,
       restoreEntry, deleteEntry, clearHistory, fmtDate,
-      editableCode, showEditor, editorDirty, copyCode, exportMarkdown, mirrorSource,
+      editableCode, showEditor, editorDirty, copyCode, exportMarkdown, mirrorSource, diagramLabel,
     };
   }
 });

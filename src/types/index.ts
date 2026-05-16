@@ -20,6 +20,7 @@ export interface RequirementLayers {
 
 export interface Requirements {
   title: string
+  diagramType?: string
   layers?: RequirementLayers | null
   systemBoundary: string
   stakeholders: string[]

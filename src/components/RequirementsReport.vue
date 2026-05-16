@@ -18,7 +18,10 @@ function priorityClass(p: string) {
 
 <template>
   <div class="report">
-    <h2 class="report-title">{{ requirements.title }} <button class="btn-export" @click="emit('exportMd')">导出 MD</button></h2>
+    <h2 class="report-title">{{ requirements.title }}
+      <span v-if="requirements.diagramType" class="dia-badge">{{ {flowchart:'流程图',sequenceDiagram:'时序图',classDiagram:'类图','stateDiagram-v2':'状态图',erDiagram:'ER图'}[requirements.diagramType] || requirements.diagramType }}</span>
+      <button class="btn-export" @click="emit('exportMd')">导出 MD</button>
+    </h2>
 
     <!-- three layers -->
     <div v-if="requirements.layers" class="layers-row">
@@ -226,6 +229,7 @@ function priorityClass(p: string) {
 
 .btn-export { font-size:11px; padding:2px 10px; border:1px solid var(--border); border-radius:4px; background:transparent; color:var(--text-secondary); cursor:pointer; vertical-align:middle; margin-left:8px; font-weight:400; }
 .btn-export:hover { background:var(--bg); color:var(--text); }
+.dia-badge { display:inline-block; font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; background:#1967d2; color:#fff; margin-left:6px; vertical-align:middle; text-transform:uppercase; letter-spacing:.3px; }
 
 .layers-row { display:flex; align-items:stretch; gap:8px; margin-bottom:20px; }
 @media(max-width:600px){ .layers-row { flex-direction:column; } }

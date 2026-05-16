@@ -11,6 +11,7 @@ export function parseModelOutput(raw: string): AnalysisResult | null {
     const result: AnalysisResult = {
       requirements: {
         title: parsed.requirements.title || '未命名系统',
+        diagramType: parsed.requirements.diagramType || 'flowchart',
         layers: parsed.requirements.layers || null,
         systemBoundary: parsed.requirements.systemBoundary || '',
         stakeholders: Array.isArray(parsed.requirements.stakeholders)
@@ -51,14 +52,13 @@ export function validateMermaid(code: string): { valid: boolean; error?: string 
     return { valid: false, error: 'Mermaid 代码为空' }
   }
 
-  if (!code.startsWith('flowchart TD') && !code.startsWith('flowchart LR')) {
-    return { valid: false, error: '只支持 flowchart TD/LR 格式' }
-  }
-
   return { valid: true }
 }
 
-export function generateFallbackMermaid(title: string): string {
-  return `flowchart TD
-  A[${title}] --> B[待分析]`
+export function generateFallbackMermaid(title: string, type = 'flowchart'): string {
+  if (type === 'erDiagram') return `erDiagram\n  实体 ||--o{ 子实体 : 包含`
+  if (type === 'sequenceDiagram') return `sequenceDiagram\n  actor 用户\n  participant 系统\n  用户->>系统: 请求\n  系统-->>用户: 响应`
+  if (type === 'stateDiagram-v2') return `stateDiagram-v2\n  [*] --> 初始\n  初始 --> [*]`
+  if (type === 'classDiagram') return `classDiagram\n  class 系统 {\n    +操作()\n  }`
+  return `flowchart TD\n  A[${title}] --> B[待分析]`
 }

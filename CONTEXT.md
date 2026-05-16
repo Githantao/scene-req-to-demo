@@ -25,7 +25,7 @@
 | ID | 功能 | 优先级 | 状态 |
 |----|------|--------|------|
 | FR-1 | 自然语言 → 结构化需求提取 | P0 | ✅ v0.1.0 |
-| FR-2 | Mermaid 流程图自动生成 | P0 | ✅ v0.1.0 |
+| FR-2 | Mermaid 多图表类型生成（流程图/时序图/类图/状态图/ERD） | P0 | ✅ v2.0.0 |
 | FR-3 | 三层需求展示 (BR→UR→SR) | P1 | ✅ v1.0.0 |
 | FR-4 | Mermaid 代码编辑器 + 实时预览 | P1 | ✅ v1.0.0 |
 | FR-5 | 导出 Markdown | P1 | ✅ v1.0.0 |
@@ -80,11 +80,11 @@
    - 每条需求必须可测试（隐式验收条件）
    - 非功能性需求区分硬性约束 vs 假设
 3. Mermaid 生成规则：
-   - 只使用 flowchart TD/LR
-   - subgraph 分组 + emoji 前缀（📥输入/⚙️处理/📤输出）
-   - 决策菱形 `{}`，分支路径 `-->|标签|`
-   - `%%` 注释说明复杂分支
-   - 每组 3-7 个节点
+   - 根据场景自动选择最佳图表类型（flowchart/sequenceDiagram/classDiagram/stateDiagram-v2/erDiagram）
+   - subgraph 分组 + emoji 前缀（📥输入/⚙️处理/📤输出）——仅 flowchart
+   - 决策菱形 `{}`，分支路径 `-->|标签|`——仅 flowchart
+   - `%%` 注释说明复杂逻辑
+   - 详见 src/utils/prompt.ts 中的图表类型选择规则
 
 ---
 
@@ -154,6 +154,7 @@ const MODEL_LIBS = {
 |-------|--------|------|
 | `jwynia/agent-skills@requirements-analysis` | 1.9K | 需求质量诊断框架（5 种问题状态） |
 | `softaworks/agent-toolkit@mermaid-diagrams` | 4.0K | Mermaid 图表语法深度参考 |
+| `davila7/claude-code-templates@mermaid-diagram-specialist` | 501 | Mermaid 图表类型选择与创建工作流 |
 
 路径：`~/.agents/skills/requirements-analysis/` 和 `~/mermaid-diagrams/`
 
@@ -289,6 +290,27 @@ Phi-3-mini-4k-instruct-q4f16_1-MLC-1 ✗ → Phi-3-mini-4k-instruct-q4f16_1-MLC 
 `access-control-allow-origin: <origin>` 正确返回。
 
 **结论：** 非此原因。
+
+---
+
+### v2.0.0 — 多图表类型支持（流程图/时序图/类图/状态图/ERD）
+
+**改进：**
+- System Prompt 全面升级：加入 5 种图表类型选择规则，根据场景内容自动选择最合适的图表类型
+- 输出 schema 新增 `diagramType` 字段
+- 移除 flowchart-only 限制，`validateMermaid` 接受所有合法 mermaid 语法
+- 新增 `generateFallbackMermaid(title, type)` 根据类型生成降级图表
+- UI 新增图表类型徽标（蓝色标签显示当前类型）
+- 安装 `davila7/claude-code-templates@mermaid-diagram-specialist` (501 安装)
+
+**图表选择规则：**
+- 多方交互/API/消息传递 → sequenceDiagram
+- 状态流转/审批/生命周期 → stateDiagram-v2
+- 数据实体/表结构 → erDiagram
+- 类/模块/接口/继承 → classDiagram
+- 纯步骤流程 → flowchart
+
+**关联文件：** `analyzer.html`、`src/utils/prompt.ts`、`src/utils/parser.ts`、`src/types/index.ts`、`src/components/RequirementsReport.vue`
 
 ---
 
