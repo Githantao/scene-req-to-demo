@@ -131,3 +131,91 @@ Prompt 结构：
 - 需要 **Chrome 113+** 或 **Edge 113+**（WebGPU 支持）
 - 从 `file://` 打开需要启用 `chrome://flags/#enable-unsafe-webgpu` 或通过 HTTP 服务
 - 推荐：`python3 -m http.server 8080` → `http://localhost:8080/analyzer.html`
+
+## 国内镜像支持
+
+模型文件默认从 HuggingFace 下载（境外服务器）。国内用户如果在下载模型时遇到网络问题，可以在模型选择器下方将 **下载源** 切换为 **国内镜像**：
+
+- **自动**（默认）— 从 HuggingFace 官方源下载
+- **国内镜像** — 模型权重从 hf-mirror.com 下载（国内网络可正常下载），WASM 引擎库保持原始源（仅 ~5MB）
+
+切换后，点击"加载模型"或"首次使用 — 开始下载模型"即可自动从镜像下载。下载完成后自动缓存，后续无需重复下载。
+
+> 注意：如果使用"国内镜像"下载中途出错，可以切换回"自动"重试，或反之。下载源仅在模型加载时生效。
+
+## 打包与跨电脑使用
+
+### 方式一：单 HTML 文件（推荐）
+
+这是最简单的跨电脑使用方式：
+
+**打包：**
+```
+1. 在开发机器上确认 analyzer.html 是最新版本
+2. 将 analyzer.html 复制到 U 盘或共享文件夹
+3. 复制到目标电脑即可
+```
+
+**使用：**
+```
+1. 目标电脑安装 Chrome 浏览器
+2. 双击 analyzer.html 用 Chrome 打开
+3. 选择模型 → 点击"加载模型"（首次需下载 ~1-2.5GB）
+4. 建议通过 HTTP 服务方式打开（见下文），以获得 WebGPU 支持
+```
+
+> ⚠️ `file://` 直接打开时 WebGPU 不可用。目标电脑首次使用时请运行：
+> ```bash
+> # 在 analyzer.html 所在目录执行：
+> python3 -m http.server 8080
+> # 然后用 Chrome 打开 http://localhost:8080/analyzer.html
+> ```
+> 或 Chrome 地址栏打开 `chrome://flags/#enable-unsafe-webgpu`，启用后重启。
+
+**压缩包分发：**
+```
+analyzer.html  (单文件，32KB)
+```
+
+将此文件放进 Zip/RAR 压缩包，传到目标电脑解压即可。如需复用已下载的模型缓存，见"缓存复制指引"。
+
+### 方式二：Vue 工程打包分发
+
+如果需要完整的工程（含二次开发能力）：
+
+**打包：**
+```bash
+# 在项目目录执行
+npm install
+npm run build
+
+# dist/ 目录包含了所有构建产物
+# 可选：压缩 dist/ 目录方便传输
+tar -czf scene-to-req-dist.tar.gz dist/
+```
+
+**部署/使用：**
+```bash
+# 方式 A：用任意静态服务器
+npx serve dist/
+# 或
+python3 -m http.server 8080 -d dist/
+
+# 方式 B：或直接将 dist/* 放到 Nginx / Caddy / IIS
+```
+
+### 方式三：复制模型缓存到新电脑
+
+如果已经在一台电脑上完成了模型下载（1-2.5GB），不想在新电脑上重新下载：
+
+```
+1. 在已下载模型的电脑上打开 Chrome，地址栏输入 chrome://version/
+2. 找到"个人资料路径"，例如：
+   macOS:   ~/Library/Application Support/Google/Chrome/Default/
+   Windows: %LOCALAPPDATA%\Google\Chrome\User Data\Default\
+3. 关闭 Chrome
+4. 复制以下目录到新电脑的相同位置：
+   - Default/IndexedDB/
+   - Default/File System/
+5. 在新电脑上打开 analyzer.html，模型缓存即生效
+```

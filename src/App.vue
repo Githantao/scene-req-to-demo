@@ -122,9 +122,11 @@ function exportMarkdown() {
         <ModelSelector
           :model-id="llm.currentModel.value"
           :loading-status="llm.status.value"
+          :mirror-source="llm.mirrorSource.value"
           @select-model="llm.currentModel.value = $event"
           @load-model="handleLoadModel"
           @unload-model="handleUnloadModel"
+          @update:mirror-source="llm.mirrorSource.value = $event"
         />
 
         <SceneInput

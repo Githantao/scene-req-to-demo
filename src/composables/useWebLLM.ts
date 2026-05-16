@@ -27,6 +27,7 @@ export function useWebLLM() {
   const progress = ref<ProgressInfo>({ text: '', progress: 0, timeElapsed: 0 })
   const error = ref<string>('')
   const currentModel = ref<ModelId>(MODEL_OPTIONS[0].id)
+  const mirrorSource = ref<'auto' | 'china'>('auto')
 
   let engine: any = null
 
@@ -37,11 +38,20 @@ export function useWebLLM() {
     currentModel.value = modelId
 
     try {
-      const { CreateMLCEngine } = await import('@mlc-ai/web-llm')
+      const { CreateMLCEngine, prebuiltAppConfig } = await import('@mlc-ai/web-llm')
+
+      const engineConfig: any = {}
+      if (mirrorSource.value === 'china') {
+        const mirroredList = prebuiltAppConfig.model_list.map((r: any) => ({
+          ...r,
+          model: r.model.replace('https://huggingface.co/', 'https://hf-mirror.com/'),
+        }))
+        engineConfig.appConfig = { ...prebuiltAppConfig, model_list: mirroredList }
+      }
 
       engine = await CreateMLCEngine(modelId, {
         initProgressCallback: (p: any) => {
-          if (p.text.includes('Loading')) {
+          if (p.text && p.text.includes('Loading')) {
             status.value = 'loading'
           }
           progress.value = {
@@ -50,6 +60,7 @@ export function useWebLLM() {
             timeElapsed: p.timeElapsed || 0,
           }
         },
+        ...engineConfig,
       })
 
       status.value = 'ready'
@@ -93,6 +104,7 @@ export function useWebLLM() {
     progress,
     error,
     currentModel,
+    mirrorSource,
     loadModel,
     unloadModel,
     chat,

@@ -24,6 +24,7 @@
 .welcome-card .btn-hero{display:block;width:100%;padding:14px 0;font-size:16px;font-weight:600;border-radius:10px}
 .row{display:flex;gap:8px}
 select{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:14px;cursor:pointer}select:disabled{opacity:.6;cursor:not-allowed}.desc{font-size:12px;color:var(--text-secondary);margin:4px 0 0}
+.mirror-row{display:flex;align-items:center;gap:10px;margin-top:6px;font-size:12px}.mirror-label{color:var(--text-secondary);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}.mirror-toggle{display:flex;align-items:center;gap:3px;cursor:pointer;color:var(--text)}.mirror-toggle input{cursor:pointer}
 .cache-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}.cache-size{font-size:11px;color:var(--text-secondary);display:flex;align-items:center;gap:4px}.cache-refresh{background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:14px;padding:0 2px;line-height:1}.cache-refresh:hover{color:var(--text)}
 .copy-help{font-size:12px;color:var(--text-secondary);margin-top:8px;padding-top:6px;border-top:1px solid var(--border)}.copy-help summary{cursor:pointer;font-weight:500}.copy-help ol{margin:6px 0;padding-left:18px}.copy-help li{margin-bottom:4px;line-height:1.5}.copy-help code{font-size:11px;background:var(--bg);padding:1px 4px;border-radius:2px}
 textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;resize:vertical;font-family:inherit;box-sizing:border-box}textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-alpha)}
@@ -88,6 +89,11 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
             </select>
           </div>
           <p class="hero-size">推荐 Qwen2.5-1.5B（中文能力强，仅 ~1GB）</p>
+          <div class="mirror-row" style="justify-content:center;margin-top:8px">
+            <span class="mirror-label" style="font-size:11px">下载源</span>
+            <label class="mirror-toggle"><input type="radio" v-model="mirrorSource" value="auto" :disabled="downloadingNow"><span>自动</span></label>
+            <label class="mirror-toggle"><input type="radio" v-model="mirrorSource" value="china" :disabled="downloadingNow"><span>国内镜像</span></label>
+          </div>
           <button class="btn btn-primary btn-hero" :disabled="downloadingNow" @click="loadModel">
             <span v-if="downloadingNow" class="spinner"></span>
             {{ downloadingNow ? '下载中...' : '首次使用 — 开始下载模型' }}
@@ -108,6 +114,17 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
               </button>
             </div>
             <div class="desc">{{ modelDesc }}</div>
+            <div class="mirror-row">
+              <span class="mirror-label">下载源</span>
+              <label class="mirror-toggle">
+                <input type="radio" v-model="mirrorSource" value="auto" :disabled="llmStatus==='downloading'||llmStatus==='loading'">
+                <span>自动</span>
+              </label>
+              <label class="mirror-toggle">
+                <input type="radio" v-model="mirrorSource" value="china" :disabled="llmStatus==='downloading'||llmStatus==='loading'">
+                <span>国内镜像</span>
+              </label>
+            </div>
             <div class="cache-row">
               <span class="cache-size">{{ cacheEntries>0?'缓存: '+cacheSize:'无缓存' }} <button class="cache-refresh" @click="scanCache">↻</button></span>
               <button v-if="cacheEntries>0" class="btn btn-xs btn-danger" :disabled="isClearing" @click="clearModelCache">{{ isClearing?'清除中...':'清除缓存' }}</button>
@@ -245,7 +262,7 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
 </div>
 
 <script type="module">
-import { CreateMLCEngine } from '@mlc-ai/web-llm';
+import { CreateMLCEngine, prebuiltAppConfig } from '@mlc-ai/web-llm';
 
 const { createApp, ref, computed, nextTick, watch } = Vue;
 
@@ -283,6 +300,7 @@ const app = createApp({
     const editableCode = ref('');
     const showEditor = ref(true);
     const editorDirty = ref(false);
+    const mirrorSource = ref(localStorage.getItem('mirror-source') || 'auto');
     let editorTimer = null;
 
     let engine = null;
@@ -316,12 +334,24 @@ const app = createApp({
       llmProgress.value = 0;
       llmProgressText.value = '初始化引擎...';
       try {
+        const engineConfig = {};
+        if (mirrorSource.value === 'china') {
+          const mirroredList = prebuiltAppConfig.model_list.map(r => ({
+            ...r,
+            model: r.model.replace('https://huggingface.co/', 'https://hf-mirror.com/'),
+          }));
+          engineConfig.appConfig = { ...prebuiltAppConfig, model_list: mirroredList };
+          localStorage.setItem('mirror-source', 'china');
+        } else {
+          localStorage.setItem('mirror-source', 'auto');
+        }
         engine = await CreateMLCEngine(currentModel.value, {
           initProgressCallback: (p) => {
             if (p.text && p.text.includes('Loading')) llmStatus.value = 'loading';
             llmProgress.value = p.progress || 0;
             llmProgressText.value = p.text || '加载中...';
           },
+          ...engineConfig,
         });
         llmStatus.value = 'ready';
         localStorage.setItem('model-dl', '1');
@@ -529,7 +559,7 @@ const app = createApp({
       loadModel, unloadModel, analyze,
       scanCache, clearModelCache,
       restoreEntry, deleteEntry, clearHistory, fmtDate,
-      editableCode, showEditor, editorDirty, copyCode, exportMarkdown,
+      editableCode, showEditor, editorDirty, copyCode, exportMarkdown, mirrorSource,
     };
   }
 });
