@@ -5,6 +5,10 @@ const props = defineProps<{
   requirements: Requirements
 }>()
 
+const emit = defineEmits<{
+  exportMd: []
+}>()
+
 function priorityClass(p: string) {
   if (p === 'high') return 'tag-red'
   if (p === 'medium') return 'tag-yellow'
@@ -14,7 +18,36 @@ function priorityClass(p: string) {
 
 <template>
   <div class="report">
-    <h2 class="report-title">{{ requirements.title }}</h2>
+    <h2 class="report-title">{{ requirements.title }} <button class="btn-export" @click="emit('exportMd')">导出 MD</button></h2>
+
+    <!-- three layers -->
+    <div v-if="requirements.layers" class="layers-row">
+      <div class="layer-card layer-biz">
+        <span class="layer-ico">🏢</span>
+        <div class="layer-body">
+          <div class="layer-lbl">业务层</div>
+          <div class="layer-t">{{ requirements.layers.business?.goal }}</div>
+          <div class="layer-d">{{ requirements.layers.business?.value }}</div>
+        </div>
+      </div>
+      <div class="layer-arr">→</div>
+      <div class="layer-card layer-user">
+        <span class="layer-ico">👤</span>
+        <div class="layer-body">
+          <div class="layer-lbl">用户层</div>
+          <div class="layer-t">{{ requirements.layers.user?.scenario }}</div>
+          <div class="layer-d">{{ requirements.layers.user?.painPoints?.join('、') }}</div>
+        </div>
+      </div>
+      <div class="layer-arr">→</div>
+      <div class="layer-card layer-sys">
+        <span class="layer-ico">⚙️</span>
+        <div class="layer-body">
+          <div class="layer-lbl">系统层</div>
+          <div class="layer-t">{{ requirements.layers.system?.summary }}</div>
+        </div>
+      </div>
+    </div>
 
     <section class="section">
       <h3 class="section-heading">系统边界</h3>
@@ -190,4 +223,21 @@ function priorityClass(p: string) {
   color: var(--text-secondary);
   font-style: italic;
 }
+
+.btn-export { font-size:11px; padding:2px 10px; border:1px solid var(--border); border-radius:4px; background:transparent; color:var(--text-secondary); cursor:pointer; vertical-align:middle; margin-left:8px; font-weight:400; }
+.btn-export:hover { background:var(--bg); color:var(--text); }
+
+.layers-row { display:flex; align-items:stretch; gap:8px; margin-bottom:20px; }
+@media(max-width:600px){ .layers-row { flex-direction:column; } }
+.layer-card { flex:1; border-radius:8px; padding:12px; display:flex; gap:10px; align-items:flex-start; }
+.layer-biz { background:#e8f0fe; border:1px solid #c5d9f7; }
+.layer-user { background:#e6f4ea; border:1px solid #b7dfc5; }
+.layer-sys { background:#fef7e0; border:1px solid #fde8b3; }
+.layer-ico { font-size:20px; line-height:1; }
+.layer-body { min-width:0; }
+.layer-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; opacity:.6; margin-bottom:2px; }
+.layer-t { font-size:13px; font-weight:600; line-height:1.4; margin-bottom:2px; }
+.layer-d { font-size:11px; color:var(--text-secondary); line-height:1.4; }
+.layer-arr { display:flex; align-items:center; color:var(--text-secondary); font-size:18px; padding:0 2px; }
+@media(max-width:600px){ .layer-arr { transform:rotate(90deg); padding:2px 0; justify-content:center; } }
 </style>

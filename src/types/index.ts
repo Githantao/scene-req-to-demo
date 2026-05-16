@@ -12,8 +12,15 @@ export interface DataFlow {
   type: 'input' | 'output' | 'storage'
 }
 
+export interface RequirementLayers {
+  business?: { goal: string; value: string }
+  user?: { scenario: string; painPoints: string[] }
+  system?: { summary: string }
+}
+
 export interface Requirements {
   title: string
+  layers?: RequirementLayers | null
   systemBoundary: string
   stakeholders: string[]
   functionalRequirements: FunctionalRequirement[]

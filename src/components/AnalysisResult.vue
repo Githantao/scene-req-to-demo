@@ -6,16 +6,21 @@ import MermaidDiagram from './MermaidDiagram.vue'
 defineProps<{
   result: AnalysisResult
 }>()
+
+const emit = defineEmits<{
+  'update:mermaidCode': [value: string]
+  'exportMd': []
+}>()
 </script>
 
 <template>
   <div class="analysis-result">
     <div class="result-panel result-left">
-      <RequirementsReport :requirements="result.requirements" />
+      <RequirementsReport :requirements="result.requirements" @export-md="emit('exportMd')" />
     </div>
     <div class="result-divider" />
     <div class="result-panel result-right">
-      <MermaidDiagram :code="result.mermaidCode" />
+      <MermaidDiagram :code="result.mermaidCode" @update:code="emit('update:mermaidCode', $event)" />
     </div>
   </div>
 </template>

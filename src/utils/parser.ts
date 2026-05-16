@@ -11,6 +11,7 @@ export function parseModelOutput(raw: string): AnalysisResult | null {
     const result: AnalysisResult = {
       requirements: {
         title: parsed.requirements.title || '未命名系统',
+        layers: parsed.requirements.layers || null,
         systemBoundary: parsed.requirements.systemBoundary || '',
         stakeholders: Array.isArray(parsed.requirements.stakeholders)
           ? parsed.requirements.stakeholders

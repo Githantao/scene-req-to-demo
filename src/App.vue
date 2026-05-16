@@ -70,6 +70,43 @@ function handleRestoreEntry(entry: HistoryEntry) {
 function handleDeleteEntry(id: string) {
   history.deleteEntry(id)
 }
+
+function exportMarkdown() {
+  const r = analysis.result.value?.requirements
+  if (!r) return
+  let md = '# ' + r.title + '\n\n'
+  if (r.layers) {
+    md += '## 需求分层\n\n'
+    if (r.layers.business) md += '### 🏢 业务层\n- **目标：** ' + r.layers.business.goal + '\n- **价值：** ' + r.layers.business.value + '\n\n'
+    if (r.layers.user) md += '### 👤 用户层\n- **场景：** ' + r.layers.user.scenario + '\n- **痛点：** ' + (r.layers.user.painPoints||[]).join('、') + '\n\n'
+    if (r.layers.system) md += '### ⚙️ 系统层\n- **职责：** ' + r.layers.system.summary + '\n\n'
+  }
+  md += '## 系统边界\n\n' + r.systemBoundary + '\n\n'
+  if (r.stakeholders?.length) md += '## 干系人\n\n' + r.stakeholders.map(s=>'- '+s).join('\n') + '\n\n'
+  if (r.functionalRequirements?.length) {
+    md += '## 功能需求\n\n'
+    r.functionalRequirements.forEach(fr => {
+      const p = fr.priority==='high'?'高':fr.priority==='medium'?'中':'低'
+      md += '### ' + fr.id + ' ' + fr.name + '（' + p + '优先级）\n' + fr.description + '\n\n'
+    })
+  }
+  if (r.dataFlows?.length) {
+    md += '## 数据流\n\n| 来源 | 方向 | 目标 | 数据 | 类型 |\n|------|------|------|------|------|\n'
+    r.dataFlows.forEach(df => {
+      const t = df.type==='input'?'输入':df.type==='output'?'输出':'存储'
+      md += '| ' + df.from + ' | → | ' + df.to + ' | ' + df.data + ' | ' + t + ' |\n'
+    })
+    md += '\n'
+  }
+  if (r.nonFunctionalRequirements?.length) md += '## 非功能性需求\n\n' + r.nonFunctionalRequirements.map(n=>'- '+n).join('\n') + '\n\n'
+  md += '## 系统流程图\n\n```mermaid\n' + (analysis.result.value?.mermaidCode||'') + '\n```\n'
+  const blob = new Blob([md], {type:'text/markdown;charset=utf-8'})
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = r.title.replace(/[\\/:*?"<>|]/g,'_') + '.md'
+  document.body.appendChild(a); a.click()
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url) }, 100)
+}
 </script>
 
 <template>
@@ -105,6 +142,8 @@ function handleDeleteEntry(id: string) {
         <AnalysisResult
           v-if="analysis.result.value"
           :result="analysis.result.value"
+          @update:mermaid-code="analysis.result.value.mermaidCode = $event"
+          @export-md="exportMarkdown"
         />
       </div>
     </main>
