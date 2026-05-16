@@ -239,6 +239,28 @@ const MODEL_LIBS = {
 
 ---
 
+### v2.0.0 — 多图表类型支持
+
+**改进：**
+- System Prompt 全面升级：加入 5 种图表类型选择规则，根据场景内容自动选择最合适的图表类型
+- 输出 schema 新增 `diagramType` 字段
+- 移除 flowchart-only 限制，`validateMermaid` 接受所有合法 mermaid 语法
+- 新增 `generateFallbackMermaid(title, type)` 根据类型生成降级图表
+- UI 新增图表类型徽标（蓝色标签显示当前类型）
+- 版本信息展示：标题栏 v2.0.0 版本号 + 更新说明弹窗
+- 安装 `davila7/claude-code-templates@mermaid-diagram-specialist` (501 安装量)
+
+**图表选择规则：**
+- 多方交互/API/消息传递 → sequenceDiagram
+- 状态流转/审批/生命周期 → stateDiagram-v2
+- 数据实体/表结构 → erDiagram
+- 类/模块/接口/继承 → classDiagram
+- 纯步骤流程 → flowchart
+
+**关联文件：** `analyzer.html`、`src/utils/prompt.ts`、`src/utils/parser.ts`、`src/types/index.ts`、`src/components/RequirementsReport.vue`、`src/components/AppHeader.vue`、`CHANGELOG.md`、`VERSION`
+
+---
+
 ### v1.1.0 — 国内镜像 + 打包文档
 
 **新增：**
@@ -344,6 +366,7 @@ npx skills find    # 搜索 agent skills
 ### git 历史摘要
 
 ```
+2ac7ccb feat: v2.0.0 多图表类型支持
 01a240b fix: 模型加载失败问题修复 (v1.1.x)
 dcd916f feat: v1.1.0 国内镜像下载源 + 打包使用文档
 2a4bc92 docs: 完整项目文档 v1.0.0
