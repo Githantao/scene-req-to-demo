@@ -9,13 +9,13 @@ export const MODEL_OPTIONS: ModelOption[] = [
     size: '~1GB',
   },
   {
-    id: 'gemma-2-2b-it-q4f16_1-MLC-1',
+    id: 'gemma-2-2b-it-q4f16_1-MLC',
     label: 'Gemma-2-2B',
     description: '结构化输出稳定，英文能力强',
     size: '~1.5GB',
   },
   {
-    id: 'Phi-3-mini-4k-instruct-q4f16_1-MLC-1',
+    id: 'Phi-3-mini-4k-instruct-q4f16_1-MLC',
     label: 'Phi-3-mini-3.8B',
     description: '能力最强，但加载慢，体积大',
     size: '~2.5GB',

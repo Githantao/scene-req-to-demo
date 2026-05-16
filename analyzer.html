@@ -6,13 +6,6 @@
 <title>场景需求分析器</title>
 <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-<script type="importmap">
-{
-  "imports": {
-    "@mlc-ai/web-llm": "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.83/+esm"
-  }
-}
-</script>
 <style>
 :root{--primary:#1967d2;--primary-alpha:rgba(25,103,210,.1);--bg:#f8f9fa;--surface:#fff;--text:#202124;--text-secondary:#5f6368;--border:#dadce0;--warn-bg:#fff3cd;--warn-border:#ffc107;--warn-text:#856404}*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:14px}.app{min-height:100vh}
 .header{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border);background:var(--surface)}.header-left{display:flex;align-items:baseline;gap:12px}.header-left h1{font-size:18px;font-weight:700;margin:0}.header-left .sub{font-size:13px;color:var(--text-secondary)}.header-right{display:flex;align-items:center;gap:12px}.header-right .model-status{font-size:12px;color:var(--text-secondary)}
@@ -262,15 +255,29 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
 </div>
 
 <script type="module">
-import { CreateMLCEngine, prebuiltAppConfig } from '@mlc-ai/web-llm';
+let CreateMLCEngine;
+try {
+  const mod = await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.83/+esm');
+  CreateMLCEngine = mod.CreateMLCEngine;
+} catch(e) {
+  console.error('WebLLM CDN load failed:', e);
+  document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:sans-serif"><h2>WebLLM 引擎加载失败</h2><p style="color:#666;margin:16px 0">无法从 CDN 加载 AI 推理引擎。可能是网络问题，请尝试：</p><ol style="text-align:left;max-width:400px;margin:0 auto;line-height:1.8"><li>刷新页面重试</li><li>检查网络连接</li><li>或使用 <code>npm run dev</code> 启动本地服务器</li></ol><p style="margin-top:20px;font-size:12px;color:#999">错误: ' + (e.message||'') + '</p></div>';
+  throw e;
+}
 
 const { createApp, ref, computed, nextTick, watch } = Vue;
 
 const MODEL_OPTIONS = [
-  { id:'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', label:'Qwen2.5-1.5B', description:'中文能力强，速度较快，推荐', size:'~1GB' },
-  { id:'gemma-2-2b-it-q4f16_1-MLC-1', label:'Gemma-2-2B', description:'结构化输出稳定，英文能力强', size:'~1.5GB' },
-  { id:'Phi-3-mini-4k-instruct-q4f16_1-MLC-1', label:'Phi-3-mini-3.8B', description:'能力最强，但加载慢，体积大', size:'~2.5GB' },
+  { id:'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', label:'Qwen2.5-1.5B', description:'中文能力强，速度较快，推荐', size:'~1GB', mirror:'https://hf-mirror.com/mlc-ai/Qwen2.5-1.5B-Instruct-q4f16_1-MLC' },
+  { id:'gemma-2-2b-it-q4f16_1-MLC', label:'Gemma-2-2B', description:'结构化输出稳定，英文能力强', size:'~1.5GB', mirror:'https://hf-mirror.com/mlc-ai/gemma-2-2b-it-q4f16_1-MLC' },
+  { id:'Phi-3-mini-4k-instruct-q4f16_1-MLC', label:'Phi-3-mini-3.8B', description:'能力最强，但加载慢，体积大', size:'~2.5GB', mirror:'https://hf-mirror.com/mlc-ai/Phi-3-mini-4k-instruct-q4f16_1-MLC' },
 ];
+
+const MODEL_LIBS = {
+  'Qwen2.5-1.5B-Instruct-q4f16_1-MLC': 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_83/base/Qwen2-1.5B-Instruct-q4f16_1_cs1k-webgpu.wasm',
+  'gemma-2-2b-it-q4f16_1-MLC': 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_83/base/gemma-2-2b-it-q4f16_1_cs1k-webgpu.wasm',
+  'Phi-3-mini-4k-instruct-q4f16_1-MLC': 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_83/base/Phi-3-mini-4k-instruct-q4f16_1_cs1k-webgpu.wasm',
+};
 
 const STORAGE_KEY = 'scene-to-req-history';
 const MAX_HISTORY = 50;
@@ -336,11 +343,13 @@ const app = createApp({
       try {
         const engineConfig = {};
         if (mirrorSource.value === 'china') {
-          const mirroredList = prebuiltAppConfig.model_list.map(r => ({
-            ...r,
-            model: r.model.replace('https://huggingface.co/', 'https://hf-mirror.com/'),
+          const ml = MODEL_OPTIONS.map(m => ({
+            model: m.mirror,
+            model_id: m.id,
+            model_lib: MODEL_LIBS[m.id] || '',
+            overrides: { context_window_size: 4096 },
           }));
-          engineConfig.appConfig = { ...prebuiltAppConfig, model_list: mirroredList };
+          engineConfig.appConfig = { model_list: ml };
           localStorage.setItem('mirror-source', 'china');
         } else {
           localStorage.setItem('mirror-source', 'auto');
@@ -359,8 +368,9 @@ const app = createApp({
         scanCache();
       } catch(e) {
         llmStatus.value = 'error';
-        const msg = e.message || '';
-        if (msg.includes('WebGPU') || msg.includes('gpu')) {
+        const msg = e.message || e.toString ? e.toString() : '';
+        console.error('Model load error:', e);
+        if (msg.includes('WebGPU') || msg.includes('gpu') || msg.includes('GPU')) {
           webgpuWarn.value = true;
           llmError.value = 'WebGPU 不可用，请参考上方提示操作。';
         } else {
