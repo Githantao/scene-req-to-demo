@@ -38,6 +38,9 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
 .empty-msg{font-size:13px;color:var(--text-secondary);font-style:italic}
 .load-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000}.load-card{background:var(--surface);border-radius:12px;padding:32px;max-width:420px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}.load-spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}.load-h{font-size:16px;font-weight:600;margin:0 0 16px}.pb{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin-bottom:12px}.pb-fill{height:100%;background:var(--primary);border-radius:3px;transition:width .3s ease}.load-t{font-size:13px;color:var(--text-secondary);margin:0 0 8px}
 .hist-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:900;display:flex;justify-content:flex-end}.hist-panel{width:360px;max-width:90vw;background:var(--surface);height:100%;display:flex;flex-direction:column;box-shadow:-4px 0 20px rgba(0,0,0,.1)}.hist-h{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}.hist-h h2{font-size:16px;font-weight:600;margin:0}.hist-actions{display:flex;gap:8px}.hist-body{flex:1;overflow-y:auto;padding:12px}.hist-item{position:relative;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all .15s}.hist-item:hover{border-color:var(--primary);background:var(--bg)}.hist-ih{display:flex;align-items:center;gap:8px;margin-bottom:4px}.hist-it{font-size:14px;font-weight:600}.hist-im{font-size:11px;color:var(--primary);background:var(--primary-alpha);padding:1px 6px;border-radius:3px}.hist-is{font-size:12px;color:var(--text-secondary);margin:4px 0;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hist-itime{font-size:11px;color:var(--text-secondary);opacity:.7}.hist-del{position:absolute;top:8px;right:8px;background:none;border:none;font-size:14px;cursor:pointer;opacity:0;transition:opacity .15s;padding:4px}.hist-item:hover .hist-del{opacity:.5}.hist-item:hover .hist-del:hover{opacity:1}.hist-empty{text-align:center;color:var(--text-secondary);font-size:14px;margin-top:40px}
+.ver-badge{font-size:11px;font-weight:600;color:var(--text-secondary);background:var(--bg);padding:1px 6px;border-radius:3px;margin-left:4px}
+.btn-ver{padding:4px 8px;font-size:13px}
+.rn-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:950;display:flex;align-items:center;justify-content:center}.rn-panel{width:500px;max-width:90vw;max-height:80vh;background:var(--surface);border-radius:12px;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2)}.rn-h{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}.rn-h div{display:flex;align-items:center;gap:8px}.rn-h h2{font-size:16px;font-weight:600;margin:0}.rn-ver-badge{font-size:11px;font-weight:700;background:var(--primary);color:#fff;padding:2px 8px;border-radius:4px}.rn-body{flex:1;overflow-y:auto;padding:16px 20px}.rn-item{padding:12px 0;border-bottom:1px solid var(--border)}.rn-item.active{background:var(--primary-alpha);margin:-8px -12px;padding:12px;border-radius:8px;border-bottom-color:transparent}.rn-item:last-child{border-bottom:none}.rn-ver{font-size:15px;font-weight:700;color:var(--text)}.rn-date{font-size:11px;color:var(--text-secondary);margin:2px 0 6px}.rn-list{margin:0;padding-left:18px}.rn-list li{font-size:13px;line-height:1.6;color:var(--text)}
 </style>
 </head>
 <body>
@@ -47,10 +50,13 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
     <div class="header">
       <div class="header-left">
         <h1>场景需求分析器</h1>
-        <span class="sub">自然语言 → 系统需求 + 流程图</span>
+        <span class="sub">自然语言 → 系统需求 + 流程图 <span class="ver-badge">v2.0.0</span></span>
       </div>
       <div class="header-right">
         <span class="model-status">{{ modelStatusText }}</span>
+        <button class="btn btn-ghost btn-ver" @click="showReleaseNotes=!showReleaseNotes" title="更新说明">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </button>
         <button class="btn btn-ghost" :class="{active:showHistory}" @click="showHistory=!showHistory">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           历史
@@ -254,6 +260,25 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
       </div>
     </Teleport>
 
+    <!-- release notes overlay -->
+    <div v-if="showReleaseNotes" class="rn-overlay" @click.self="showReleaseNotes=false">
+      <div class="rn-panel">
+        <div class="rn-h">
+          <div><span class="rn-ver-badge">v{{ APP_VERSION }}</span><h2>更新说明</h2></div>
+          <button class="btn btn-sm btn-ghost" @click="showReleaseNotes=false">✕</button>
+        </div>
+        <div class="rn-body">
+          <div v-for="rn in RELEASE_NOTES" :key="rn.ver" class="rn-item" :class="{active:rn.ver==='v'+APP_VERSION}">
+            <div class="rn-ver">{{ rn.ver }}</div>
+            <div class="rn-date">{{ rn.date }}</div>
+            <ul class="rn-list">
+              <li v-for="item in rn.items" :key="item">{{ item }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -299,6 +324,7 @@ const app = createApp({
     const analysisError = ref('');
     const result = ref(null);
     const showHistory = ref(false);
+    const showReleaseNotes = ref(false);
     const historyEntries = ref(loadHistory());
     const cacheSize = ref('');
     const cacheEntries = ref(0);
@@ -312,8 +338,16 @@ const app = createApp({
     const editorDirty = ref(false);
     const mirrorSource = ref(localStorage.getItem('mirror-source') || 'auto');
     let editorTimer = null;
-
     let engine = null;
+
+    const APP_VERSION = '2.0.0';
+    const RELEASE_NOTES = [
+      { ver:'v2.0.0', date:'2026-05-16', items:['多图表类型支持：根据场景自动选择 flowchart / sequenceDiagram / classDiagram / stateDiagram-v2 / erDiagram','图表类型徽标展示','System Prompt 5 种图表选择规则','版本信息与更新说明展示'] },
+      { ver:'v1.1.0', date:'2026-05-16', items:['国内镜像下载源（hf-mirror.com）','打包与跨电脑使用文档'] },
+      { ver:'v1.0.0', date:'2026-05-16', items:['Mermaid 代码编辑器 + 实时预览','三层需求展示（BR→UR→SR）','导出 Markdown','复制 Mermaid 代码'] },
+      { ver:'v0.2.0', date:'2026-05-16', items:['System Prompt 需求分析规则升级','安装 requirements-analysis / mermaid-diagrams skills'] },
+      { ver:'v0.1.0', date:'2026-05-16', items:['项目初始化：Vue + Vite + TypeScript 工程','单 HTML 文件版本 analyzer.html','WebLLM 浏览器本地推理（3 模型支持）','基础 Mermaid 流程图生成','模型下载进度 + 缓存管理','历史记录（localStorage）','WebGPU 检测 + 首次引导'] },
+    ];
 
     const modelOptions = MODEL_OPTIONS;
     const downloadingNow = computed(() => llmStatus.value==='downloading'||llmStatus.value==='loading');
@@ -579,6 +613,7 @@ const app = createApp({
       scanCache, clearModelCache,
       restoreEntry, deleteEntry, clearHistory, fmtDate,
       editableCode, showEditor, editorDirty, copyCode, exportMarkdown, mirrorSource, diagramLabel,
+      showReleaseNotes, APP_VERSION, RELEASE_NOTES,
     };
   }
 });

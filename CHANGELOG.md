@@ -1,5 +1,21 @@
 # Changelog
 
+## v2.0.0 (2026-05-16)
+
+### 新增
+- **多图表类型支持** — 根据场景内容自动选择最佳图表类型：流程图（默认）、时序图（sequenceDiagram）、类图（classDiagram）、状态图（stateDiagram-v2）、ER 图（erDiagram）
+- **图表类型徽标** — 结果页面流程图标题旁显示蓝色类型标签
+- **版本信息展示** — 页面标题栏显示当前版本号，右侧"更新说明"按钮查看版本历史
+
+### 改进
+- **System Prompt** 全面升级：加入 5 种图表类型选择规则，根据场景语义自动匹配
+- **输出 schema** 新增 `diagramType` 字段
+- **parser.ts** 移除 flowchart-only 限制，`validateMermaid` 接受所有合法 mermaid 语法
+- **analyzer.html** 与 Vue 组件同步更新
+
+### 已安装的 Agent Skills
+- `davila7/claude-code-templates@mermaid-diagram-specialist` — Mermaid 图表类型选择与创建工作流 (501 安装量)
+
 ## v1.1.0 (2026-05-16)
 
 ### 新增
