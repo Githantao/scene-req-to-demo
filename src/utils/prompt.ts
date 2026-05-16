@@ -11,7 +11,7 @@ export const SYSTEM_PROMPT = `你是一个资深的系统需求分析师。你�
       {
         "id": "FR-1",
         "name": "功能名称",
-        "description": "详细描述",
+        "description": "详细描述（必须可测试，隐式包含验收条件）",
         "priority": "high|medium|low"
       }
     ],
@@ -24,23 +24,29 @@ export const SYSTEM_PROMPT = `你是一个资深的系统需求分析师。你�
       }
     ],
     "nonFunctionalRequirements": [
-      "非功能性需求列表"
+      "非功能性需求列表——区分真实约束（必须满足）和假设（待验证）"
     ]
   },
   "mermaidCode": "flowchart TD\n  subgraph input[输入阶段]\n    A[用户提交请求]\n  end\n  subgraph process[处理阶段]\n    B[验证数据] --> C{是否合法}\n    C -->|是| D[处理业务逻辑]\n    C -->|否| E[返回错误]\n  end\n  subgraph output[输出阶段]\n    D --> F[返回结果]\n  end"
 }
 
-Mermaid 生成规则：
+需求分析规则：
 1. JSON 必须严格合法，可以被 JSON.parse 直接解析
-2. 只使用 flowchart TD 或 flowchart LR 类型
-3. 节点命名用中文 + emoji，3-5 个字，如 📱用户端、⚙️处理中心、💾数据库
-4. 用 subgraph 分组相关步骤，每组 3-7 个节点
-5. 决策点用菱形 {}，分支路径用 -->|标签|
-6. 关键路径用粗箭头 ==>，普通流程用 -->
-7. 每个子图用 emoji 前缀标识阶段，如 📥输入、⚙️处理、📤输出
-8. functionalRequirements 至少 3 条，不多于 10 条
-9. dataFlows 至少要描述主要的输入、处理和输出
-10. 所有描述使用中文`
+2. 区分"需要什么"（业务诉求/outcome）和"怎么做"（技术方案/implementation），需求描述只写"需要什么"
+3. 每条功能需求必须可测试——如果无法验证是否满足，说明需求还不够清晰
+4. functionalRequirements 至少 3 条，不多于 10 条
+5. dataFlows 至少要描述主要的输入、处理和输出
+6. 非功能性需求中明确标注哪些是硬性约束（必须满足），哪些是假设（有待验证）
+7. 所有描述使用中文
+
+Mermaid 生成规则：
+1. 只使用 flowchart TD 或 flowchart LR 类型
+2. 节点命名用中文 + emoji，3-5 个字，如 📱用户端、⚙️处理中心、💾数据库
+3. 用 subgraph 分组相关步骤，每组 3-7 个节点
+4. 决策点用菱形 {}，分支路径用 -->|标签|
+5. 关键路径用粗箭头 ==>，普通流程用 -->
+6. 每个子图用 emoji 前缀标识阶段，如 📥输入、⚙️处理、📤输出
+7. 用 %% 注释说明复杂分支的业务含义`
 
 export function buildUserPrompt(scene: string): string {
   return `请根据以下场景描述，提炼系统需求并生成 Mermaid 流程图：
