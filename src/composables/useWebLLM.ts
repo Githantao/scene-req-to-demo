@@ -77,7 +77,7 @@ export function useWebLLM() {
     progress.value = { text: '', progress: 0, timeElapsed: 0 }
   }
 
-  async function chat(systemPrompt: string, userPrompt: string): Promise<string> {
+  async function chat(systemPrompt: string, userPrompt: string, _signal?: AbortSignal): Promise<string> {
     if (!engine) throw new Error('模型未加载')
 
     const reply = await engine.chat.completions.create({
@@ -85,6 +85,19 @@ export function useWebLLM() {
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
+      temperature: 0.2,
+      max_tokens: 4096,
+      top_p: 0.9,
+    })
+
+    return reply.choices[0]?.message?.content || ''
+  }
+
+  async function chatRaw(messages: { role: string; content: string }[], _signal?: AbortSignal): Promise<string> {
+    if (!engine) throw new Error('模型未加载')
+
+    const reply = await engine.chat.completions.create({
+      messages,
       temperature: 0.2,
       max_tokens: 4096,
       top_p: 0.9,
@@ -108,6 +121,7 @@ export function useWebLLM() {
     loadModel,
     unloadModel,
     chat,
+    chatRaw,
     resetChat,
   }
 }

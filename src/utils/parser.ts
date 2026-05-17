@@ -13,6 +13,7 @@ export function parseModelOutput(raw: string): AnalysisResult | null {
         title: parsed.requirements.title || '未命名系统',
         diagramType: parsed.requirements.diagramType || 'flowchart',
         layers: parsed.requirements.layers || null,
+        mainRequirement: parsed.requirements.mainRequirement || null,
         systemBoundary: parsed.requirements.systemBoundary || '',
         stakeholders: Array.isArray(parsed.requirements.stakeholders)
           ? parsed.requirements.stakeholders

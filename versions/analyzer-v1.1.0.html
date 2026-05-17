@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>场景需求分析器</title>
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "@mlc-ai/web-llm": "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.83/+esm"
+  }
+}
+</script>
+<style>
+:root{--primary:#1967d2;--primary-alpha:rgba(25,103,210,.1);--bg:#f8f9fa;--surface:#fff;--text:#202124;--text-secondary:#5f6368;--border:#dadce0;--warn-bg:#fff3cd;--warn-border:#ffc107;--warn-text:#856404}*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:14px}.app{min-height:100vh}
+.header{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border);background:var(--surface)}.header-left{display:flex;align-items:baseline;gap:12px}.header-left h1{font-size:18px;font-weight:700;margin:0}.header-left .sub{font-size:13px;color:var(--text-secondary)}.header-right{display:flex;align-items:center;gap:12px}.header-right .model-status{font-size:12px;color:var(--text-secondary)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;border:none}.btn-sm{padding:4px 10px;font-size:12px}.btn-xs{padding:2px 8px;font-size:11px}.btn-lg{padding:12px 32px;font-size:16px}.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover:not(:disabled){filter:brightness(1.1)}.btn-primary:disabled{opacity:.5;cursor:not-allowed}.btn-outline{border:1px solid var(--border);background:transparent;color:var(--text)}.btn-outline:hover{background:var(--bg)}.btn-ghost{background:transparent;color:var(--text-secondary);border:none}.btn-ghost:hover{color:var(--text)}.btn-danger{background:#fce8e6;color:#c5221f;border:1px solid #f5c6cb}.btn-danger:hover:not(:disabled){background:#f5c6cb}.btn-danger:disabled{opacity:.5;cursor:not-allowed}.btn-ghost.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-hero{display:block;width:100%;padding:14px 0;font-size:16px;font-weight:600;border-radius:10px;margin-top:12px}.hero-size{font-size:12px;color:var(--text-secondary);text-align:center;margin:4px 0 0}
+.main{padding:24px}.container{max-width:1200px;margin:0 auto}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}.card-title{font-size:12px;font-weight:600;color:var(--text-secondary);margin:0 0 8px;text-transform:uppercase;letter-spacing:.5px}
+.welcome-card{background:var(--surface);border:2px solid var(--primary);border-radius:12px;padding:32px;margin-bottom:16px;text-align:center}.welcome-card h2{font-size:22px;font-weight:700;margin:0 0 8px}.welcome-card p{font-size:14px;color:var(--text-secondary);margin:0 0 24px;line-height:1.6}.welcome-card .model-pick{display:flex;gap:8px;margin-bottom:8px;text-align:left}.welcome-card .model-pick select{flex:1}
+.welcome-card .btn-hero{display:block;width:100%;padding:14px 0;font-size:16px;font-weight:600;border-radius:10px}
+.row{display:flex;gap:8px}
+select{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:14px;cursor:pointer}select:disabled{opacity:.6;cursor:not-allowed}.desc{font-size:12px;color:var(--text-secondary);margin:4px 0 0}
+.mirror-row{display:flex;align-items:center;gap:10px;margin-top:6px;font-size:12px}.mirror-label{color:var(--text-secondary);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}.mirror-toggle{display:flex;align-items:center;gap:3px;cursor:pointer;color:var(--text)}.mirror-toggle input{cursor:pointer}
+.cache-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}.cache-size{font-size:11px;color:var(--text-secondary);display:flex;align-items:center;gap:4px}.cache-refresh{background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:14px;padding:0 2px;line-height:1}.cache-refresh:hover{color:var(--text)}
+.copy-help{font-size:12px;color:var(--text-secondary);margin-top:8px;padding-top:6px;border-top:1px solid var(--border)}.copy-help summary{cursor:pointer;font-weight:500}.copy-help ol{margin:6px 0;padding-left:18px}.copy-help li{margin-bottom:4px;line-height:1.5}.copy-help code{font-size:11px;background:var(--bg);padding:1px 4px;border-radius:2px}
+textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;resize:vertical;font-family:inherit;box-sizing:border-box}textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-alpha)}
+.footer{display:flex;align-items:center;gap:12px;margin-top:8px}.hint{font-size:13px;color:var(--text-secondary)}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite;margin-right:4px}@keyframes spin{to{transform:rotate(360deg)}}
+.error-banner{background:#fce8e6;border:1px solid #f5c6cb;color:#c5221f;padding:12px 16px;border-radius:8px;font-size:14px;margin-bottom:16px}
+.warn-banner{background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn-text);padding:12px 16px;border-radius:8px;font-size:14px;margin-bottom:16px;text-align:left}.warn-banner strong{display:block;margin-bottom:4px}.warn-banner code{background:rgba(0,0,0,.06);padding:1px 5px;border-radius:3px;font-size:12px}
+.split{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}.split-pane{flex:1;padding:20px;overflow-y:auto;max-height:70vh}.split-div{width:1px;background:var(--border)}@media(max-width:768px){.split{flex-direction:column}.split-div{width:100%;height:1px}}
+.report-title{font-size:20px;font-weight:700;margin:0 0 16px}
+.layers-row{display:flex;align-items:stretch;gap:8px;margin-bottom:20px}@media(max-width:600px){.layers-row{flex-direction:column}}.layer-card{flex:1;border-radius:8px;padding:12px;display:flex;gap:10px;align-items:flex-start}.layer-biz{background:#e8f0fe;border:1px solid #c5d9f7}.layer-user{background:#e6f4ea;border:1px solid #b7dfc5}.layer-sys{background:#fef7e0;border:1px solid #fde8b3}.layer-icon{font-size:20px;line-height:1}.layer-body{min-width:0}.layer-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.6;margin-bottom:2px}.layer-title{font-size:13px;font-weight:600;line-height:1.4;margin-bottom:2px}.layer-desc{font-size:11px;color:var(--text-secondary);line-height:1.4}.layer-arrow{display:flex;align-items:center;color:var(--text-secondary);font-size:18px;padding:0 2px}@media(max-width:600px){.layer-arrow{transform:rotate(90deg);padding:2px 0;justify-content:center}}
+.sec{margin-bottom:20px}.sec-h{font-size:14px;font-weight:600;color:var(--text-secondary);margin:0 0 8px;text-transform:uppercase;letter-spacing:.5px}.sec-p{font-size:14px;line-height:1.6;margin:0}.tag{font-size:12px;padding:2px 8px;border-radius:4px;font-weight:500;display:inline-block}.tag-list{display:flex;flex-wrap:wrap;gap:6px}.tag-b{background:#e8f0fe;color:#1967d2}.tag-r{background:#fce8e6;color:#c5221f}.tag-y{background:#fef7e0;color:#ea8600}.tag-g{background:#e6f4ea;color:#137333}.tag-gy{background:#f1f3f4;color:#5f6368}
+.req-card{border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px}.req-h{display:flex;align-items:center;gap:8px;margin-bottom:4px}.req-id{font-size:11px;font-weight:700;color:var(--primary);font-family:monospace}.req-n{font-size:14px;font-weight:600;margin:4px 0}.req-d{font-size:13px;color:var(--text-secondary);margin:0;line-height:1.5}
+.df-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}.df-item:last-child{border-bottom:none}.df-s,.df-t{font-weight:500}.df-a{color:var(--primary)}.df-d{color:var(--text-secondary);flex:1}.nfr{margin:0;padding-left:20px}.nfr li{font-size:13px;line-height:1.6;margin-bottom:4px}
+.diagram-box{overflow:auto;background:#fff;border-radius:8px;border:1px solid var(--border);padding:16px;min-height:200px}.diagram-box svg{max-width:100%;height:auto}
+.merr{border:1px solid #f5c6cb;background:#fce8e6;border-radius:8px;padding:12px}.merr-t{font-size:14px;font-weight:600;color:#c5221f;margin:0 0 8px}.merr-d{font-size:12px;color:#c5221f;white-space:pre-wrap;margin:0}
+.code-editor{margin-top:12px}.editor-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}.editor-label{font-size:11px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:.5px}.editor-actions{display:flex;align-items:center;gap:6px}.editor-hint{font-size:11px;color:var(--primary);font-style:italic}.editor-textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:#1e1e1e;color:#d4d4d4;font-family:'SF Mono','Menlo','Monaco','Courier New',monospace;font-size:12px;line-height:1.5;resize:vertical;min-height:80px;tab-size:2}.editor-textarea:focus{outline:none;border-color:var(--primary)}
+.empty-msg{font-size:13px;color:var(--text-secondary);font-style:italic}
+.load-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000}.load-card{background:var(--surface);border-radius:12px;padding:32px;max-width:420px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}.load-spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}.load-h{font-size:16px;font-weight:600;margin:0 0 16px}.pb{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin-bottom:12px}.pb-fill{height:100%;background:var(--primary);border-radius:3px;transition:width .3s ease}.load-t{font-size:13px;color:var(--text-secondary);margin:0 0 8px}
+.hist-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:900;display:flex;justify-content:flex-end}.hist-panel{width:360px;max-width:90vw;background:var(--surface);height:100%;display:flex;flex-direction:column;box-shadow:-4px 0 20px rgba(0,0,0,.1)}.hist-h{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}.hist-h h2{font-size:16px;font-weight:600;margin:0}.hist-actions{display:flex;gap:8px}.hist-body{flex:1;overflow-y:auto;padding:12px}.hist-item{position:relative;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all .15s}.hist-item:hover{border-color:var(--primary);background:var(--bg)}.hist-ih{display:flex;align-items:center;gap:8px;margin-bottom:4px}.hist-it{font-size:14px;font-weight:600}.hist-im{font-size:11px;color:var(--primary);background:var(--primary-alpha);padding:1px 6px;border-radius:3px}.hist-is{font-size:12px;color:var(--text-secondary);margin:4px 0;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hist-itime{font-size:11px;color:var(--text-secondary);opacity:.7}.hist-del{position:absolute;top:8px;right:8px;background:none;border:none;font-size:14px;cursor:pointer;opacity:0;transition:opacity .15s;padding:4px}.hist-item:hover .hist-del{opacity:.5}.hist-item:hover .hist-del:hover{opacity:1}.hist-empty{text-align:center;color:var(--text-secondary);font-size:14px;margin-top:40px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="app">
+    <!-- header -->
+    <div class="header">
+      <div class="header-left">
+        <h1>场景需求分析器</h1>
+        <span class="sub">自然语言 → 系统需求 + 流程图</span>
+      </div>
+      <div class="header-right">
+        <span class="model-status">{{ modelStatusText }}</span>
+        <button class="btn btn-ghost" :class="{active:showHistory}" @click="showHistory=!showHistory">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          历史
+        </button>
+      </div>
+    </div>
+
+    <!-- main -->
+    <div class="main">
+      <div class="container">
+
+        <!-- WebGPU not available warning -->
+        <div v-if="webgpuWarn" class="warn-banner">
+          <strong>当前环境不支持 WebGPU</strong>
+          <p style="margin:4px 0">本工具需要 WebGPU 来运行 AI 模型。当前页面是通过 <code>file://</code> 直接打开的，Chrome 出于安全原因禁用了 WebGPU。</p>
+          <p style="margin:4px 0"><b>方案一（推荐）：</b>用任意静态服务器托管此页面，例如在文件所在目录执行：<br><code style="display:inline-block;margin:4px 0">python3 -m http.server 8080</code><br>然后用 Chrome 打开 <code>http://localhost:8080/analyzer.html</code></p>
+          <p style="margin:4px 0"><b>方案二：</b>Chrome 地址栏输入 <code>chrome://flags/#enable-unsafe-webgpu</code>，设为 Enabled，重启浏览器后即可从 <code>file://</code> 使用。</p>
+        </div>
+
+        <!-- model load error -->
+        <div v-if="llmError" class="error-banner">{{ llmError }}</div>
+
+        <!-- FIRST USE welcome -->
+        <div v-if="showWelcome && !webgpuWarn" class="welcome-card">
+          <h2>欢迎使用场景需求分析器</h2>
+          <p>这是一个完全在浏览器本地运行的 AI 工具。输入自然语言场景描述，自动提取结构化系统需求，并生成 Mermaid 流程图。所有处理都在本地完成。</p>
+          <div class="model-pick">
+            <select v-model="currentModel" :disabled="downloadingNow">
+              <option v-for="m in modelOptions" :key="m.id" :value="m.id">{{ m.label }} ({{ m.size }})</option>
+            </select>
+          </div>
+          <p class="hero-size">推荐 Qwen2.5-1.5B（中文能力强，仅 ~1GB）</p>
+          <div class="mirror-row" style="justify-content:center;margin-top:8px">
+            <span class="mirror-label" style="font-size:11px">下载源</span>
+            <label class="mirror-toggle"><input type="radio" v-model="mirrorSource" value="auto" :disabled="downloadingNow"><span>自动</span></label>
+            <label class="mirror-toggle"><input type="radio" v-model="mirrorSource" value="china" :disabled="downloadingNow"><span>国内镜像</span></label>
+          </div>
+          <button class="btn btn-primary btn-hero" :disabled="downloadingNow" @click="loadModel">
+            <span v-if="downloadingNow" class="spinner"></span>
+            {{ downloadingNow ? '下载中...' : '首次使用 — 开始下载模型' }}
+          </button>
+        </div>
+
+        <!-- normal UI (shown after model is cached) -->
+        <template v-if="!showWelcome && !webgpuWarn">
+          <div class="card">
+            <div class="card-title">模型选择</div>
+            <div class="row">
+              <select v-model="currentModel" :disabled="llmStatus==='downloading'||llmStatus==='loading'">
+                <option v-for="m in modelOptions" :key="m.id" :value="m.id">{{ m.label }} ({{ m.size }})</option>
+              </select>
+              <button v-if="llmStatus==='ready'" class="btn btn-sm btn-outline" @click="unloadModel">卸载</button>
+              <button v-else class="btn btn-sm btn-primary" :disabled="llmStatus==='downloading'||llmStatus==='loading'" @click="loadModel">
+                {{ llmStatus==='downloading'||llmStatus==='loading'?'加载中...':'加载模型' }}
+              </button>
+            </div>
+            <div class="desc">{{ modelDesc }}</div>
+            <div class="mirror-row">
+              <span class="mirror-label">下载源</span>
+              <label class="mirror-toggle">
+                <input type="radio" v-model="mirrorSource" value="auto" :disabled="llmStatus==='downloading'||llmStatus==='loading'">
+                <span>自动</span>
+              </label>
+              <label class="mirror-toggle">
+                <input type="radio" v-model="mirrorSource" value="china" :disabled="llmStatus==='downloading'||llmStatus==='loading'">
+                <span>国内镜像</span>
+              </label>
+            </div>
+            <div class="cache-row">
+              <span class="cache-size">{{ cacheEntries>0?'缓存: '+cacheSize:'无缓存' }} <button class="cache-refresh" @click="scanCache">↻</button></span>
+              <button v-if="cacheEntries>0" class="btn btn-xs btn-danger" :disabled="isClearing" @click="clearModelCache">{{ isClearing?'清除中...':'清除缓存' }}</button>
+            </div>
+            <details class="copy-help"><summary>如何从其他电脑复制已缓存的模型</summary><ol><li>在已下载模型的电脑上打开 Chrome，地址栏输入 <code>chrome://version/</code>，找到"个人资料路径"</li><li>关闭 Chrome，进入该路径的父目录，找到 <code>Default/IndexedDB</code> 和 <code>Default/File System</code> 目录</li><li>将这两个目录复制到新电脑的相同位置</li><li>重新打开本页面，缓存即可生效</li></ol><p style="margin:6px 0 0;font-size:11px"><strong>提示：</strong>每台电脑只需下载一次，后续离线可用。直接在新电脑上下载是最简单的方式。</p></details>
+          </div>
+
+          <div class="card">
+            <div class="card-title">场景描述</div>
+            <textarea v-model="sceneText" :placeholder="'描述你的系统场景，例如：\n「我需要在校园内实现一个共享单车系统，学生可以通过手机扫码解锁单车，骑行结束后上锁结算。管理员可以在后台管理单车和查看使用统计。」'"></textarea>
+            <div class="footer">
+              <button class="btn btn-primary" :disabled="llmStatus!=='ready'||analysisStatus==='analyzing'" @click="analyze">
+                <span v-if="analysisStatus==='analyzing'" class="spinner"></span>
+                {{ analysisStatus==='analyzing'?'分析中...':'分析' }}
+              </button>
+              <span v-if="llmStatus!=='ready' && llmStatus!=='downloading' && llmStatus!=='loading'" class="hint">请先加载模型</span>
+            </div>
+          </div>
+
+          <div v-if="analysisError" class="error-banner">{{ analysisError }}</div>
+
+          <div v-if="result" class="split">
+            <div class="split-pane">
+              <div class="report-title">{{ result.requirements.title }}
+                <button class="btn btn-xs btn-outline" style="vertical-align:middle;margin-left:8px" @click="exportMarkdown">导出 MD</button>
+              </div>
+
+              <!-- three layers -->
+              <div v-if="result.requirements.layers" class="layers-row">
+                <div class="layer-card layer-biz">
+                  <div class="layer-icon">🏢</div>
+                  <div class="layer-body">
+                    <div class="layer-label">业务层</div>
+                    <div class="layer-title">{{ result.requirements.layers.business?.goal }}</div>
+                    <div class="layer-desc">{{ result.requirements.layers.business?.value }}</div>
+                  </div>
+                </div>
+                <div class="layer-arrow">→</div>
+                <div class="layer-card layer-user">
+                  <div class="layer-icon">👤</div>
+                  <div class="layer-body">
+                    <div class="layer-label">用户层</div>
+                    <div class="layer-title">{{ result.requirements.layers.user?.scenario }}</div>
+                    <div class="layer-desc">{{ result.requirements.layers.user?.painPoints?.join('、') }}</div>
+                  </div>
+                </div>
+                <div class="layer-arrow">→</div>
+                <div class="layer-card layer-sys">
+                  <div class="layer-icon">⚙️</div>
+                  <div class="layer-body">
+                    <div class="layer-label">系统层</div>
+                    <div class="layer-title">{{ result.requirements.layers.system?.summary }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sec"><div class="sec-h">系统边界</div><p class="sec-p">{{ result.requirements.systemBoundary }}</p></div>
+              <div class="sec"><div class="sec-h">干系人</div><div class="tag-list"><span v-for="s in result.requirements.stakeholders" :key="s" class="tag tag-b">{{ s }}</span></div><p v-if="!result.requirements.stakeholders.length" class="empty-msg">无干系人</p></div>
+              <div class="sec"><div class="sec-h">功能需求</div>
+                <div v-for="fr in result.requirements.functionalRequirements" :key="fr.id" class="req-card">
+                  <div class="req-h"><span class="req-id">{{ fr.id }}</span><span class="tag" :class="fr.priority==='high'?'tag-r':fr.priority==='medium'?'tag-y':'tag-gy'">{{ fr.priority==='high'?'高':fr.priority==='medium'?'中':'低' }}</span></div>
+                  <div class="req-n">{{ fr.name }}</div><p class="req-d">{{ fr.description }}</p>
+                </div>
+                <p v-if="!result.requirements.functionalRequirements.length" class="empty-msg">无功能需求</p>
+              </div>
+              <div class="sec"><div class="sec-h">数据流</div>
+                <div v-for="(df,i) in result.requirements.dataFlows" :key="i" class="df-item">
+                  <span class="df-s">{{ df.from }}</span><span class="df-a">→</span><span class="df-t">{{ df.to }}</span><span class="df-d">({{ df.data }})</span>
+                  <span class="tag" :class="df.type==='input'?'tag-g':df.type==='output'?'tag-b':'tag-gy'" style="margin-left:auto">{{ df.type==='input'?'输入':df.type==='output'?'输出':'存储' }}</span>
+                </div>
+                <p v-if="!result.requirements.dataFlows.length" class="empty-msg">无数据流</p>
+              </div>
+              <div class="sec"><div class="sec-h">非功能性需求</div>
+                <ul v-if="result.requirements.nonFunctionalRequirements.length" class="nfr"><li v-for="(nfr,i) in result.requirements.nonFunctionalRequirements" :key="i">{{ nfr }}</li></ul>
+                <p v-else class="empty-msg">无非功能性需求</p>
+              </div>
+            </div>
+            <div class="split-div"></div>
+            <div class="split-pane">
+              <div class="sec-h" style="margin-bottom:12px">系统流程图</div>
+              <div v-if="mermaidError" class="merr"><p class="merr-t">Mermaid 渲染错误</p><pre class="merr-d">{{ mermaidError }}</pre></div>
+              <div v-else-if="result.mermaidCode" class="diagram-box" v-html="mermaidSvg"></div>
+              <p v-else class="empty-msg">无流程图</p>
+
+              <div v-if="result.mermaidCode" class="code-editor">
+                <div class="editor-toolbar">
+                  <span class="editor-label">编辑 Mermaid 代码</span>
+                  <div class="editor-actions">
+                    <span v-if="editorDirty" class="editor-hint">已修改·自动渲染</span>
+                    <button class="btn btn-xs btn-outline" @click="copyCode">复制</button>
+                    <button class="btn btn-xs btn-ghost" @click="showEditor=!showEditor">
+                      {{ showEditor?'收起':'展开' }}
+                    </button>
+                  </div>
+                </div>
+                <textarea v-if="showEditor" v-model="editableCode" class="editor-textarea" rows="6" spellcheck="false"></textarea>
+              </div>
+            </div>
+          </div>
+        </template>
+
+      </div>
+    </div>
+
+    <!-- loading overlay -->
+    <div v-if="llmStatus==='downloading'||llmStatus==='loading'" class="load-overlay">
+      <div class="load-card">
+        <div class="load-spin"></div>
+        <div class="load-h">{{ llmStatus==='downloading'?'下载模型中...':'加载模型中...' }}</div>
+        <div class="pb"><div class="pb-fill" :style="{width:(llmProgress*100)+'%'}"></div></div>
+        <p class="load-t">{{ llmProgressText }}</p>
+        <p style="font-size:12px;color:var(--text-secondary);opacity:.7;margin:0">模型体积较大，首次加载需要下载约 1-2.5GB。下载后会自动缓存。</p>
+      </div>
+    </div>
+
+    <!-- history panel -->
+    <Teleport to="body">
+      <div v-if="showHistory" class="hist-overlay">
+        <div class="hist-panel">
+          <div class="hist-h"><h2>历史记录</h2><div class="hist-actions"><button v-if="historyEntries.length" class="btn btn-sm btn-outline" @click="clearHistory">清空</button><button class="btn btn-sm btn-ghost" @click="showHistory=false">✕</button></div></div>
+          <div class="hist-body">
+            <div v-for="entry in historyEntries" :key="entry.id" class="hist-item" @click="restoreEntry(entry)">
+              <div class="hist-ih"><span class="hist-it">{{ entry.result.requirements.title||'未命名' }}</span><span class="hist-im">{{ entry.modelUsed.split('-').slice(0,2).join('-') }}</span></div>
+              <div class="hist-is">{{ entry.sceneText.slice(0,80) }}{{ entry.sceneText.length>80?'...':'' }}</div>
+              <span class="hist-itime">{{ fmtDate(entry.timestamp) }}</span>
+              <button class="hist-del" @click.stop="deleteEntry(entry.id)">🗑</button>
+            </div>
+            <p v-if="!historyEntries.length" class="hist-empty">暂无历史记录</p>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+  </div>
+</div>
+
+<script type="module">
+import { CreateMLCEngine, prebuiltAppConfig } from '@mlc-ai/web-llm';
+
+const { createApp, ref, computed, nextTick, watch } = Vue;
+
+const MODEL_OPTIONS = [
+  { id:'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', label:'Qwen2.5-1.5B', description:'中文能力强，速度较快，推荐', size:'~1GB' },
+  { id:'gemma-2-2b-it-q4f16_1-MLC-1', label:'Gemma-2-2B', description:'结构化输出稳定，英文能力强', size:'~1.5GB' },
+  { id:'Phi-3-mini-4k-instruct-q4f16_1-MLC-1', label:'Phi-3-mini-3.8B', description:'能力最强，但加载慢，体积大', size:'~2.5GB' },
+];
+
+const STORAGE_KEY = 'scene-to-req-history';
+const MAX_HISTORY = 50;
+
+const SYSTEM_PROMPT = '你是一个资深的系统需求分析师。你的任务是根据用户描述的自然语言场景，提炼出严格、完整的系统需求，并生成对应的 Mermaid 流程图。\n\n你必须严格遵守以下 JSON 输出格式，不要输出任何多余的解释：\n\n{\n  "requirements": {\n    "title": "系统名称（从场景中提取）",\n    "layers": {\n      "business": { "goal": "一句话描述业务目标", "value": "给组织/业务带来的价值" },\n      "user": { "scenario": "典型用户使用场景描述", "painPoints": ["用户痛点列表"] },\n      "system": { "summary": "系统在整体方案中承担的职责概述" }\n    },\n    "systemBoundary": "系统边界描述",\n    "stakeholders": ["干系人列表"],\n    "functionalRequirements": [\n      { "id": "FR-1", "name": "功能名称", "description": "详细描述（必须可测试）", "priority": "high|medium|low" }\n    ],\n    "dataFlows": [\n      { "from": "数据来源", "to": "数据目标", "data": "数据描述", "type": "input|output|storage" }\n    ],\n    "nonFunctionalRequirements": ["区分硬性约束与假设"]\n  },\n  "mermaidCode": "flowchart TD\\n  subgraph input[输入阶段]\\n    A[用户提交请求]\\n  end\\n  subgraph process[处理阶段]\\n    B[验证数据] --> C{是否合法}\\n    C -->|是| D[处理业务逻辑]\\n    C -->|否| E[返回错误]\\n  end\\n  subgraph output[输出阶段]\\n    D --> F[返回结果]\\n  end"\n}\n\n需求分析规则：\n1. JSON 必须严格合法\n2. layers 字段必须包含 business（业务层）、user（用户层）、system（系统层）三层\n3. 区分"需要什么"和"怎么做"，需求描述只写"需要什么"\n4. 每条功能需求必须可测试\n5. functionalRequirements 至少 3 条，不多于 10 条\n6. 非功能性需求中标注硬性约束 vs 假设\n7. 所有描述使用中文\n\nMermaid 生成规则：\n1. 只使用 flowchart TD 或 flowchart LR\n2. 节点命名用中文 + emoji，3-5 个字\n3. 用 subgraph 分组，每组 3-7 个节点\n4. 决策点用菱形 {}，分支路径用 -->|标签|\n5. 每个子图用 emoji 前缀标识阶段\n6. 用 %% 注释说明复杂分支的业务含义';
+
+const app = createApp({
+  setup() {
+    const sceneText = ref('');
+    const currentModel = ref(MODEL_OPTIONS[0].id);
+    const llmStatus = ref('idle');
+    const llmProgress = ref(0);
+    const llmProgressText = ref('');
+    const llmError = ref('');
+    const analysisStatus = ref('idle');
+    const analysisError = ref('');
+    const result = ref(null);
+    const showHistory = ref(false);
+    const historyEntries = ref(loadHistory());
+    const cacheSize = ref('');
+    const cacheEntries = ref(0);
+    const isClearing = ref(false);
+    const mermaidSvg = ref('');
+    const mermaidError = ref('');
+    const showWelcome = ref(localStorage.getItem('model-dl') !== '1');
+    const webgpuWarn = ref(false);
+    const editableCode = ref('');
+    const showEditor = ref(true);
+    const editorDirty = ref(false);
+    const mirrorSource = ref(localStorage.getItem('mirror-source') || 'auto');
+    let editorTimer = null;
+
+    let engine = null;
+
+    const modelOptions = MODEL_OPTIONS;
+    const downloadingNow = computed(() => llmStatus.value==='downloading'||llmStatus.value==='loading');
+    const modelDesc = computed(() => MODEL_OPTIONS.find(m=>m.id===currentModel.value)?.description||'');
+    const modelStatusText = computed(() => {
+      if (llmStatus.value==='idle') return '';
+      if (llmStatus.value==='downloading') return '下载中...';
+      if (llmStatus.value==='loading') return '加载中...';
+      if (llmStatus.value==='ready') return currentModel.value.split('-').slice(0,2).join('-')+' 已就绪';
+      if (llmStatus.value==='error') return '加载失败';
+      return '';
+    });
+
+    // WebGPU check
+    function checkWebGPU() {
+      if (!navigator.gpu) {
+        webgpuWarn.value = true;
+        return false;
+      }
+      return true;
+    }
+
+    async function loadModel() {
+      if (!checkWebGPU()) return;
+
+      llmStatus.value = 'downloading';
+      llmError.value = '';
+      llmProgress.value = 0;
+      llmProgressText.value = '初始化引擎...';
+      try {
+        const engineConfig = {};
+        if (mirrorSource.value === 'china') {
+          const mirroredList = prebuiltAppConfig.model_list.map(r => ({
+            ...r,
+            model: r.model.replace('https://huggingface.co/', 'https://hf-mirror.com/'),
+          }));
+          engineConfig.appConfig = { ...prebuiltAppConfig, model_list: mirroredList };
+          localStorage.setItem('mirror-source', 'china');
+        } else {
+          localStorage.setItem('mirror-source', 'auto');
+        }
+        engine = await CreateMLCEngine(currentModel.value, {
+          initProgressCallback: (p) => {
+            if (p.text && p.text.includes('Loading')) llmStatus.value = 'loading';
+            llmProgress.value = p.progress || 0;
+            llmProgressText.value = p.text || '加载中...';
+          },
+          ...engineConfig,
+        });
+        llmStatus.value = 'ready';
+        localStorage.setItem('model-dl', '1');
+        showWelcome.value = false;
+        scanCache();
+      } catch(e) {
+        llmStatus.value = 'error';
+        const msg = e.message || '';
+        if (msg.includes('WebGPU') || msg.includes('gpu')) {
+          webgpuWarn.value = true;
+          llmError.value = 'WebGPU 不可用，请参考上方提示操作。';
+        } else {
+          llmError.value = '模型加载失败: ' + msg;
+        }
+      }
+    }
+
+    function unloadModel() {
+      engine = null;
+      llmStatus.value = 'idle';
+      llmProgress.value = 0;
+      llmProgressText.value = '';
+      result.value = null;
+      analysisStatus.value = 'idle';
+    }
+
+    async function analyze() {
+      if (!sceneText.value.trim()) { analysisError.value = '请输入场景描述'; return; }
+      if (!engine) { analysisError.value = '请先加载模型'; return; }
+      analysisStatus.value = 'analyzing';
+      analysisError.value = '';
+      result.value = null;
+      mermaidSvg.value = '';
+      mermaidError.value = '';
+      try {
+        const reply = await engine.chat.completions.create({
+          messages: [
+            { role:'system', content:SYSTEM_PROMPT },
+            { role:'user', content:'请根据以下场景描述，提炼系统需求并生成 Mermaid 流程图：\n\n场景描述：\n'+sceneText.value+'\n\n请严格按照要求输出 JSON 格式的结果。' },
+          ],
+          temperature: 0.2, max_tokens: 4096, top_p: 0.9,
+        });
+        const raw = reply.choices[0]?.message?.content || '';
+        const parsed = parseOutput(raw);
+        if (!parsed) { analysisStatus.value = 'error'; analysisError.value = '模型输出格式异常，请重试或换一个模型'; return; }
+        result.value = parsed;
+        analysisStatus.value = 'done';
+        editableCode.value = parsed.mermaidCode;
+        showEditor.value = true;
+        editorDirty.value = false;
+        renderMermaid(parsed.mermaidCode);
+        saveToHistory(parsed);
+      } catch(e) { analysisStatus.value = 'error'; analysisError.value = e.message || '分析失败'; }
+    }
+
+    function parseOutput(raw) {
+      let json = raw;
+      const m = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (m) json = m[1].trim();
+      else { const b = raw.match(/{[\s\S]*}/); if (b) json = b[0].trim(); }
+      try {
+        const p = JSON.parse(json);
+        if (!p.requirements || !p.mermaidCode) return null;
+        return {
+          requirements: {
+            title: p.requirements.title||'未命名系统',
+            layers: p.requirements.layers||null,
+            systemBoundary: p.requirements.systemBoundary||'',
+            stakeholders: Array.isArray(p.requirements.stakeholders)?p.requirements.stakeholders:[],
+            functionalRequirements: Array.isArray(p.requirements.functionalRequirements)?p.requirements.functionalRequirements:[],
+            dataFlows: Array.isArray(p.requirements.dataFlows)?p.requirements.dataFlows:[],
+            nonFunctionalRequirements: Array.isArray(p.requirements.nonFunctionalRequirements)?p.requirements.nonFunctionalRequirements:[],
+          },
+          mermaidCode: p.mermaidCode||'', rawOutput: raw,
+        };
+      } catch { return null; }
+    }
+
+    async function renderMermaid(code) {
+      if (!code) return;
+      mermaidError.value = '';
+      const cleaned = code.replace(/\\n/g, '\n').trim();
+      try { const {svg} = await mermaid.render('m-'+Date.now(), cleaned); mermaidSvg.value = svg; }
+      catch(e) { mermaidError.value = e.message||'渲染失败'; mermaidSvg.value = ''; }
+    }
+
+    function saveToHistory(r) {
+      const entry = { id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), timestamp:Date.now(), sceneText:sceneText.value, result:r, modelUsed:currentModel.value };
+      historyEntries.value.unshift(entry);
+      if (historyEntries.value.length > MAX_HISTORY) historyEntries.value = historyEntries.value.slice(0, MAX_HISTORY);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(historyEntries.value));
+    }
+
+    function loadHistory() { try { const d=localStorage.getItem(STORAGE_KEY); return d?JSON.parse(d):[]; } catch { return []; } }
+
+    function restoreEntry(entry) {
+      sceneText.value = entry.sceneText; result.value = entry.result; analysisStatus.value = 'done';
+      editableCode.value = entry.result.mermaidCode; showEditor.value = true; editorDirty.value = false;
+      showHistory.value = false; nextTick(() => { if (entry.result.mermaidCode) renderMermaid(entry.result.mermaidCode); });
+    }
+
+    function deleteEntry(id) { historyEntries.value = historyEntries.value.filter(e=>e.id!==id); localStorage.setItem(STORAGE_KEY, JSON.stringify(historyEntries.value)); }
+    function clearHistory() { historyEntries.value = []; localStorage.removeItem(STORAGE_KEY); }
+    function fmtDate(ts) { const d=new Date(ts); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+
+    async function scanCache() {
+      if (!('caches' in window)) { cacheEntries.value=0; cacheSize.value=''; return; }
+      try {
+        const names = await caches.keys();
+        const relevant = names.filter(n => /mlc|webllm|llm/i.test(n));
+        let total = 0;
+        for (const name of relevant) { const cache = await caches.open(name); total += (await cache.keys()).length; }
+        cacheEntries.value = total;
+        if ('storage' in navigator && 'estimate' in navigator.storage) {
+          const est = await navigator.storage.estimate();
+          cacheSize.value = fmtBytes(est.usage||0);
+        } else { cacheSize.value = total>0?fmtBytes(total*50*1024*1024):'0 KB'; }
+      } catch { cacheEntries.value = 0; cacheSize.value = ''; }
+    }
+
+    async function clearModelCache() {
+      isClearing.value = true;
+      try { const names = await caches.keys(); for (const n of names) { if (/mlc|webllm|llm/i.test(n)) await caches.delete(n); } await scanCache(); }
+      finally { isClearing.value = false; }
+    }
+
+    function fmtBytes(b) {
+      if (!b) return '0 KB';
+      const u=['B','KB','MB','GB'];
+      const i=Math.min(Math.floor(Math.log(b)/Math.log(1024)),u.length-1);
+      return (b/Math.pow(1024,i)).toFixed(i?1:0)+' '+u[i];
+    }
+
+    // Watch editableCode for live re-render (debounced 600ms)
+    watch(editableCode, (val) => {
+      if (!val || val === result.value?.mermaidCode) { editorDirty.value = false; return; }
+      editorDirty.value = true;
+      clearTimeout(editorTimer);
+      editorTimer = setTimeout(() => {
+        renderMermaid(val);
+        editorDirty.value = false;
+      }, 600);
+    });
+
+    async function copyCode() {
+      try {
+        await navigator.clipboard.writeText(editableCode.value);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = editableCode.value;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+    }
+
+    function exportMarkdown() {
+      const r = result.value?.requirements;
+      if (!r) return;
+      let md = '# ' + r.title + '\n\n';
+      if (r.layers) {
+        md += '## 需求分层\n\n';
+        if (r.layers.business) md += '### 🏢 业务层\n- **目标：** ' + r.layers.business.goal + '\n- **价值：** ' + r.layers.business.value + '\n\n';
+        if (r.layers.user) md += '### 👤 用户层\n- **场景：** ' + r.layers.user.scenario + '\n- **痛点：** ' + (r.layers.user.painPoints||[]).join('、') + '\n\n';
+        if (r.layers.system) md += '### ⚙️ 系统层\n- **职责：** ' + r.layers.system.summary + '\n\n';
+      }
+      md += '## 系统边界\n\n' + r.systemBoundary + '\n\n';
+      if (r.stakeholders?.length) md += '## 干系人\n\n' + r.stakeholders.map(s=>'- '+s).join('\n') + '\n\n';
+      if (r.functionalRequirements?.length) {
+        md += '## 功能需求\n\n';
+        r.functionalRequirements.forEach(fr => {
+          const p = fr.priority==='high'?'高':fr.priority==='medium'?'中':'低';
+          md += '### ' + fr.id + ' ' + fr.name + '（' + p + '优先级）\n' + fr.description + '\n\n';
+        });
+      }
+      if (r.dataFlows?.length) {
+        md += '## 数据流\n\n| 来源 | 方向 | 目标 | 数据 | 类型 |\n|------|------|------|------|------|\n';
+        r.dataFlows.forEach(df => {
+          const t = df.type==='input'?'输入':df.type==='output'?'输出':'存储';
+          md += '| ' + df.from + ' | → | ' + df.to + ' | ' + df.data + ' | ' + t + ' |\n';
+        });
+        md += '\n';
+      }
+      if (r.nonFunctionalRequirements?.length) md += '## 非功能性需求\n\n' + r.nonFunctionalRequirements.map(n=>'- '+n).join('\n') + '\n\n';
+      md += '## 系统流程图\n\n```mermaid\n' + (result.value?.mermaidCode||'') + '\n```\n';
+      const blob = new Blob([md], {type:'text/markdown;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = r.title.replace(/[\\/:*?"<>|]/g,'_') + '.md';
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+    }
+
+    // Init
+    checkWebGPU();
+    scanCache();
+    mermaid.initialize({ startOnLoad:false, theme:'default', securityLevel:'loose', fontFamily:'inherit' });
+
+    return {
+      sceneText, currentModel, llmStatus, llmProgress, llmProgressText, llmError,
+      analysisStatus, analysisError, result, showHistory, historyEntries,
+      cacheSize, cacheEntries, isClearing, mermaidSvg, mermaidError,
+      showWelcome, webgpuWarn, modelOptions, modelDesc, modelStatusText, downloadingNow,
+      loadModel, unloadModel, analyze,
+      scanCache, clearModelCache,
+      restoreEntry, deleteEntry, clearHistory, fmtDate,
+      editableCode, showEditor, editorDirty, copyCode, exportMarkdown, mirrorSource,
+    };
+  }
+});
+
+app.mount('#app');
+</script>
+</body>
+</html>

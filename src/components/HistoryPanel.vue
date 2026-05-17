@@ -50,6 +50,7 @@ function formatDate(ts: number) {
               <div class="item-header">
                 <span class="item-title">{{ entry.result.requirements.title || '未命名' }}</span>
                 <span class="item-model">{{ entry.modelUsed.split('-').slice(0, 2).join('-') }}</span>
+                <span v-if="entry.analysisTime" class="item-time-badge">{{ entry.analysisTime }}</span>
               </div>
               <p class="item-scene">{{ entry.sceneText.slice(0, 80) }}{{ entry.sceneText.length > 80 ? '...' : '' }}</p>
               <span class="item-time">{{ formatDate(entry.timestamp) }}</span>
@@ -150,6 +151,12 @@ function formatDate(ts: number) {
   background: var(--primary-alpha);
   padding: 1px 6px;
   border-radius: 3px;
+}
+
+.item-time-badge {
+  font-size: 10px;
+  color: var(--text-secondary);
+  padding: 1px 4px;
 }
 
 .item-scene {

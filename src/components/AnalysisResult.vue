@@ -5,10 +5,12 @@ import MermaidDiagram from './MermaidDiagram.vue'
 
 defineProps<{
   result: AnalysisResult
+  diagramType?: string
 }>()
 
 const emit = defineEmits<{
   'update:mermaidCode': [value: string]
+  'update:diagramType': [value: string]
   'exportMd': []
 }>()
 </script>
@@ -20,7 +22,13 @@ const emit = defineEmits<{
     </div>
     <div class="result-divider" />
     <div class="result-panel result-right">
-      <MermaidDiagram :code="result.mermaidCode" @update:code="emit('update:mermaidCode', $event)" />
+      <MermaidDiagram
+        :code="result.mermaidCode"
+        :requirements="result.requirements"
+        :diagram-type="diagramType || result.requirements.diagramType || 'flowchart'"
+        @update:code="emit('update:mermaidCode', $event)"
+        @update:diagram-type="emit('update:diagramType', $event)"
+      />
     </div>
   </div>
 </template>

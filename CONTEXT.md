@@ -57,10 +57,14 @@
       "user": { "scenario": "用户场景", "painPoints": ["痛点"] },
       "system": { "summary": "系统职责" }
     },
+    "mainRequirement": {
+      "name": "总体需求名称",
+      "description": "对该需求的概括描述"
+    },
     "systemBoundary": "系统边界",
     "stakeholders": ["干系人"],
     "functionalRequirements": [
-      { "id": "FR-1", "name": "功能名", "description": "描述（必须可测试）", "priority": "high|medium|low" }
+      { "id": "FR-1", "name": "子功能名", "description": "描述（必须可测试）", "priority": "high|medium|low" }
     ],
     "dataFlows": [
       { "from": "来源", "to": "目标", "data": "数据描述", "type": "input|output|storage" }
@@ -74,17 +78,27 @@
 ### 2.4 System Prompt 设计
 
 提示词结构（`analyzer.html` / `src/utils/prompt.ts`）：
-1. JSON 输出格式定义（含三层需求字段）
+1. JSON 输出格式定义（含三层需求字段 + `mainRequirement` 总体需求）
 2. 需求分析规则：
+   - 先识别 1 条核心/总体需求（mainRequirement），再拆解为子 FR
    - 区分"需要什么"（outcome）vs "怎么做"（implementation）
    - 每条需求必须可测试（隐式验收条件）
-   - 非功能性需求区分硬性约束 vs 假设
+   - mainRequirement 恰 1 条，functionalRequirements 2-6 条
 3. Mermaid 生成规则：
+   - 节点命名固定格式 [动词+名词]，每次相同概念复用相同命名
+   - 流程图结构固定顺序：输入 → 核心处理 → 分支决策 → 输出
+   - subgraph 按阶段分组（输入阶段/处理阶段/输出阶段）
+   - 决策菱形最多 3 个分支
    - 根据场景自动选择最佳图表类型（flowchart/sequenceDiagram/classDiagram/stateDiagram-v2/erDiagram）
-   - subgraph 分组 + emoji 前缀（📥输入/⚙️处理/📤输出）——仅 flowchart
-   - 决策菱形 `{}`，分支路径 `-->|标签|`——仅 flowchart
    - `%%` 注释说明复杂逻辑
-   - 详见 src/utils/prompt.ts 中的图表类型选择规则
+4. FR 粒度规则（v2.1.0）：
+   - 每个 FR 代表一个**完整的业务能力**（如"用户登录认证"），而非 UI 操作步骤（如"显示登录页"）
+   - 粒度控制在**系统分析层面**，实现阶段的细化拆分留给后续迭代
+5. 生成质量增强：
+   - **RaR 语义对齐** — 用户 prompt 要求"深入理解场景"后再分析
+   - **CoVe 条件验证** — 复杂场景自动触发二次验证
+   - **seed=42** — API 请求体传入 `seed:42` 使输出更稳定确定
+   - ⚠️ `response_format: {type:'json_object'}` 已验证不兼容 Qwen2.5-1.5B，已移除
 
 ---
 
@@ -104,7 +118,17 @@
       └─ 模型缓存（Cache API + IndexedDB）
 ```
 
-### 3.2 技术栈
+### 3.2 推理参数配置
+
+`engine.chat.completions.create()` 传入以下参数控制生成行为：
+
+| 参数 | 值 | 理由 |
+|------|-----|------|
+| temperature | 0.2 | 结构化需求提取需要确定性输出；Qwen 官方推荐 0.1-0.3 结构化任务 |
+| top_p | 0.9 | 保持适度多样性但不发散 |
+| max_tokens | 4096 | Mermaid 代码 + 中文描述容易超 2048 |
+
+### 3.3 技术栈
 
 | 组件 | 技术 | 版本 |
 |------|------|------|
@@ -115,12 +139,12 @@
 | 图表渲染 | mermaid.js | 11.x |
 | CDN（纯净版） | jsdelivr | — |
 
-### 3.3 两种交付形态
+### 3.4 两种交付形态
 
 1. **单 HTML 文件** `analyzer.html` — CDN 加载 Vue + Mermaid + WebLLM，双击 Chrome 打开即用
 2. **Vue + Vite 工程** — `npm run dev` / `npm run build`，适合二次开发
 
-### 3.4 模型支持
+### 3.5 模型支持
 
 | 模型 ID（v0.2.83） | 标签 | 大小 | 说明 |
 |---------------------|------|------|------|
@@ -257,82 +281,51 @@ const MODEL_LIBS = {
 - 类/模块/接口/继承 → classDiagram
 - 纯步骤流程 → flowchart
 
-**关联文件：** `analyzer.html`、`src/utils/prompt.ts`、`src/utils/parser.ts`、`src/types/index.ts`、`src/components/RequirementsReport.vue`、`src/components/AppHeader.vue`、`CHANGELOG.md`、`VERSION`
+**关联文件：** `analyzer.html`、`src/utils/prompt.ts`、`src/utils/parser.ts`、`src/types/index.ts`、`src/components/RequirementsReport.vue`
 
 ---
 
-### v1.1.0 — 国内镜像 + 打包文档
+### Bug #7: response_format 导致引擎挂起（10+ 分钟无结果）
+
+---
+
+### v2.2.0 — 主需求 + Mermaid 稳定性 + 实时计时 + 历史用时
 
 **新增：**
-- 国内镜像下载源（hf-mirror.com 模型权重镜像）
-- 下载源切换 radio（自动 / 国内镜像）
-- README 打包与跨电脑使用说明
+- `mainRequirement` 字段：先提炼 1 条总体需求，再拆解为子 FRs
+- 蓝色边框卡片在 FR 区域顶部展示总体需求
+- Markdown 导出包含总体需求章节
+- 实时分析计时器：分析中 header 显示累计用时（每秒更新）
+- WebLLM 分析时显示"分析中... (用时)"
+- 历史记录条目追加分析用时徽标
+
+**Prompt 改进：**
+- System Prompt 添加 `mainRequirement` JSON 格式定义
+- 分析规则重排：先识别总体需求再拆解为子 FR
+- Mermaid 生成规则重写：固定节点命名格式 [动词+名词]、流程图固定顺序（输入→处理→决策→输出）、subgraph 按阶段分组、决策分支上限 3 条
+
+**API 稳定性：**
+- `seed: 42` 添加到所有 API 请求体（`analyzer.html` apiCompletion + Vue `useApiLLM.ts` chat/chatRaw）
+- `ApiLLMConfig` 类型新增 `seed?: number`
+
+**Bug 修复：**
+- WebLLM 分析时 header 无状态提示 → 现在显示"模型名 分析中... (累计用时)"
+- 历史记录不显示分析用时 → 现在显示
+
+**关联文件：**
+- `analyzer.html` — SYSTEM_PROMPT, parseOutput, apiCompletion 添加 seed, 模板 mainRequirement 卡片 + 历史用时 + 实时计时 setInterval, CSS main-req-card + hist-tm, modelStatusText 支持 analyzing 状态
+- `src/utils/prompt.ts` — 更新规则
+- `src/utils/parser.ts` — 解析 mainRequirement
+- `src/types/index.ts` — 新增 MainRequirement 接口, HistoryEntry 添加 analysisTime, ApiLLMConfig 添加 seed
+- `src/composables/useApiLLM.ts` — chat/chatRaw 添加 seed:42
+- `src/composables/useAnalysis.ts` — 实时计时 setInterval/clearInterval, reset 清理计时器
+- `src/components/RequirementsReport.vue` — 模板+样式 mainRequirement 卡片
+- `src/components/HistoryPanel.vue` — 分析用时徽标
+- `src/App.vue` — modelStatusText 支持 analyzing 状态, 历史保存传入 analysisTime, 导出 MD 含总体需求
 
 ---
 
-### Bug #4: 模型 ID 错配导致"模型加载失败"
-
-**症状：** 选择首次使用→开始下载→显示"模型加载失败"
-
-**原因：** web-llm v0.2.83 中 Gemma/Phi-3 模型 ID 没有 `-1` 后缀：
-```
-gemma-2-2b-it-q4f16_1-MLC-1 ✗ → gemma-2-2b-it-q4f16_1-MLC ✓
-Phi-3-mini-4k-instruct-q4f16_1-MLC-1 ✗ → Phi-3-mini-4k-instruct-q4f16_1-MLC ✓
-```
-`CreateMLCEngine` 在 `appConfig.model_list` 中找不到模型记录，直接抛错。
-
-**修复：** 修正 MODEL_OPTIONS 中的 model_id 字段
-**关联文件：** `analyzer.html`、`src/composables/useWebLLM.ts`
-
----
-
-### Bug #5: importmap 加载 CDN 模块失败
-
-**症状：** "typeError: failed to fetch"
-
-**原因分析（多层）：**
-1. `/+esm` 格式的 CDN 模块体积 6MB（包含所有 165 个模型记录 + WASM），在部分网络下不稳定
-2. `prebuiltAppConfig` 从 `/+esm` 导入可能不可用（树摇或导出格式问题）
-3. `importmap` 的静态导入失败会阻止整个模块执行
-
-**修复：**
-1. 移除 `importmap`，改用 `await import(CDN_URL)` 动态加载 + try/catch
-2. 移除 `prebuiltAppConfig` 外部依赖，硬编码镜像模型记录
-3. CDN 加载失败时显示友好错误提示（代替白屏）
-
-**关联文件：** `analyzer.html`
-
----
-
-### Bug #6: hf-mirror CORS 问题排查
-
-**怀疑：** hf-mirror CORS 头部可能导致跨域请求被浏览器拦截。
-
-**验证结果：** ✅ 正常工作。hf-mirror 使用动态 CORS（echo back `Origin` 头），
-`access-control-allow-origin: <origin>` 正确返回。
-
-**结论：** 非此原因。
-
----
-
-### v2.0.0 — 多图表类型支持（流程图/时序图/类图/状态图/ERD）
-
-**改进：**
-- System Prompt 全面升级：加入 5 种图表类型选择规则，根据场景内容自动选择最合适的图表类型
-- 输出 schema 新增 `diagramType` 字段
-- 移除 flowchart-only 限制，`validateMermaid` 接受所有合法 mermaid 语法
-- 新增 `generateFallbackMermaid(title, type)` 根据类型生成降级图表
-- UI 新增图表类型徽标（蓝色标签显示当前类型）
-- 安装 `davila7/claude-code-templates@mermaid-diagram-specialist` (501 安装)
-
-**图表选择规则：**
-- 多方交互/API/消息传递 → sequenceDiagram
-- 状态流转/审批/生命周期 → stateDiagram-v2
-- 数据实体/表结构 → erDiagram
-- 类/模块/接口/继承 → classDiagram
-- 纯步骤流程 → flowchart
-
-**关联文件：** `analyzer.html`、`src/utils/prompt.ts`、`src/utils/parser.ts`、`src/types/index.ts`、`src/components/RequirementsReport.vue`
+### v2.1.0 — (嵌入式在 2.4 System Prompt 中) FR 粒度 + RaR/CoVe
 
 ---
 
@@ -396,7 +389,10 @@ b9d2d06 feat: 场景需求分析器 v0.1.0
 - **修改解析逻辑** → `analyzer.html` 中 `parseOutput()` + `src/utils/parser.ts`
 - **修改 UI** → `analyzer.html` 中 Vue template + 对应 Vue 组件 (`src/components/`)
 - **修改 WebLLM 集成** → `analyzer.html` 中 `loadModel/chat` 函数 + `src/composables/useWebLLM.ts`
+- **修改分析流程（analyzer.html）** → `analyze()` 函数含 RaR + CoVe 逻辑；`isComplexScene()` / `coveVerify()` 辅助函数
+- **修改分析流程（Vue）** → `src/composables/useAnalysis.ts` 含 `isComplexScene()` / 条件 CoVe；`src/App.vue` 传入 `chatRawFn`
 - **修改镜像/模型配置** → `analyzer.html` 中 `MODEL_OPTIONS` + `MODEL_LIBS`
+- **测试数据集** → `docs/test-dataset-railway-signal.md`
 
 ### 修改后必须验证
 

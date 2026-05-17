@@ -12,6 +12,11 @@ export interface DataFlow {
   type: 'input' | 'output' | 'storage'
 }
 
+export interface MainRequirement {
+  name: string
+  description: string
+}
+
 export interface RequirementLayers {
   business?: { goal: string; value: string }
   user?: { scenario: string; painPoints: string[] }
@@ -22,6 +27,7 @@ export interface Requirements {
   title: string
   diagramType?: string
   layers?: RequirementLayers | null
+  mainRequirement?: MainRequirement | null
   systemBoundary: string
   stakeholders: string[]
   functionalRequirements: FunctionalRequirement[]
@@ -41,6 +47,7 @@ export interface HistoryEntry {
   sceneText: string
   result: AnalysisResult
   modelUsed: string
+  analysisTime?: string
 }
 
 export type ModelId = string
@@ -59,4 +66,16 @@ export interface ProgressInfo {
   text: string
   progress: number
   timeElapsed: number
+}
+
+export type BackendType = 'webllm' | 'api'
+
+export interface ApiLLMConfig {
+  provider: string
+  endpoint: string
+  apiKey: string
+  model: string
+  temperature: number
+  maxTokens: number
+  seed?: number
 }

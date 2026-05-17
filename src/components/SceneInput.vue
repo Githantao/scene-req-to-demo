@@ -10,6 +10,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   analyze: []
+  cancel: []
 }>()
 </script>
 
@@ -23,13 +24,16 @@ const emit = defineEmits<{
     />
     <div class="input-footer">
       <button
+        v-if="analysisStatus !== 'analyzing'"
         class="btn btn-primary"
-        :disabled="!modelReady || analysisStatus === 'analyzing'"
+        :disabled="!modelReady"
         @click="emit('analyze')"
-      >
-        <span v-if="analysisStatus === 'analyzing'" class="spinner" />
-        {{ analysisStatus === 'analyzing' ? '分析中...' : '分析' }}
-      </button>
+      >分析</button>
+      <button
+        v-else
+        class="btn btn-danger"
+        @click="emit('cancel')"
+      ><span class="spinner" />停止</button>
       <span v-if="!modelReady && modelStatusText" class="hint">
         请先加载模型
       </span>

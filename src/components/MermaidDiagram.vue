@@ -1,14 +1,21 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
+import type { Requirements } from '../types'
+import { generateMermaidForType, getDiagramOptions } from '../utils/mermaidGenerator'
 
 const props = defineProps<{
   code: string
+  requirements?: Requirements | null
+  diagramType?: string
 }>()
 
 const emit = defineEmits<{
   'update:code': [value: string]
+  'update:diagramType': [value: string]
 }>()
 
+const diagramOptions = getDiagramOptions()
+const selectedType = ref(props.diagramType || 'flowchart')
 const svgRef = ref<string>('')
 const renderError = ref<string>('')
 const editableCode = ref('')
@@ -17,16 +24,32 @@ const editorDirty = ref(false)
 let editorTimer: ReturnType<typeof setTimeout> | null = null
 let mermaid: any = null
 
-watch(() => props.code, (val) => {
-  if (val) {
-    editableCode.value = val
-    editorDirty.value = false
+const displayCode = computed(() => {
+  if (!props.requirements) return props.code
+  const originalType = props.requirements.diagramType || 'flowchart'
+  if (selectedType.value === originalType) {
+    return props.code
   }
-  render()
+  return generateMermaidForType(props.requirements, selectedType.value)
+})
+
+function onTypeChange(type: string) {
+  selectedType.value = type
+  emit('update:diagramType', type)
+  editableCode.value = displayCode.value
+  editorDirty.value = false
+  renderCode(displayCode.value)
+}
+
+watch(() => props.code, (val) => {
+  if (val && !props.requirements) {
+    if (!editableCode.value) editableCode.value = val
+    renderCode(val)
+  }
 })
 
 watch(editableCode, (val) => {
-  if (!val || val === props.code) { editorDirty.value = false; return }
+  if (!val || val === displayCode.value) { editorDirty.value = false; return }
   editorDirty.value = true
   if (editorTimer) clearTimeout(editorTimer)
   editorTimer = setTimeout(async () => {
@@ -37,15 +60,12 @@ watch(editableCode, (val) => {
 })
 
 onMounted(() => {
-  if (props.code) {
-    editableCode.value = props.code
-    render()
+  const startCode = displayCode.value || props.code
+  if (startCode) {
+    editableCode.value = startCode
+    renderCode(startCode)
   }
 })
-
-async function render() {
-  await renderCode(props.code)
-}
 
 async function renderCode(code: string) {
   if (!code) return
@@ -85,15 +105,20 @@ async function copyCode() {
 
 <template>
   <div class="diagram">
-    <h3 class="section-heading">系统流程图</h3>
+    <div class="diagram-header">
+      <h3 class="section-heading">系统流程图</h3>
+      <select v-if="requirements" class="dia-select" :value="selectedType" @change="onTypeChange(($event.target as HTMLSelectElement).value)">
+        <option v-for="opt in diagramOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+      </select>
+    </div>
     <div v-if="renderError" class="error-box">
       <p class="error-title">Mermaid 渲染错误</p>
       <pre class="error-detail">{{ renderError }}</pre>
     </div>
-    <div v-else-if="code" class="svg-container" v-html="svgRef" />
+    <div v-else-if="displayCode" class="svg-container" v-html="svgRef" />
     <p v-else class="empty">无流程图</p>
 
-    <div v-if="code" class="code-editor">
+    <div v-if="displayCode" class="code-editor">
       <div class="editor-toolbar">
         <span class="editor-label">编辑 Mermaid 代码</span>
         <div class="editor-actions">
@@ -108,6 +133,24 @@ async function copyCode() {
 </template>
 
 <style scoped>
+.diagram-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.diagram-header .section-heading {
+  margin: 0;
+}
+.dia-select {
+  font-size: 12px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
 .section-heading {
   font-size: 14px;
   font-weight: 600;

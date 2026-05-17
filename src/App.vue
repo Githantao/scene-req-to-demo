@@ -1,24 +1,63 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import AppHeader from './components/AppHeader.vue'
 import ModelSelector from './components/ModelSelector.vue'
 import SceneInput from './components/SceneInput.vue'
 import LoadingOverlay from './components/LoadingOverlay.vue'
 import AnalysisResult from './components/AnalysisResult.vue'
 import HistoryPanel from './components/HistoryPanel.vue'
+import ApiSettings from './components/ApiSettings.vue'
 import { useWebLLM } from './composables/useWebLLM'
+import { useApiLLM } from './composables/useApiLLM'
 import { useAnalysis } from './composables/useAnalysis'
 import { useHistory } from './composables/useHistory'
-import type { HistoryEntry } from './types'
+import type { BackendType, HistoryEntry } from './types'
 
 const llm = useWebLLM()
+const apiLLM = useApiLLM()
 const analysis = useAnalysis()
 const history = useHistory()
 
 const showHistory = ref(false)
+const showSettings = ref(false)
 const sceneText = ref('')
+const diagramType = ref('flowchart')
+
+const backend = ref<BackendType>(localStorage.getItem('llm-backend') as BackendType || 'webllm')
+watch(backend, (v) => localStorage.setItem('llm-backend', v))
+
+const activeChatFn = computed(() => {
+  if (backend.value === 'webllm') {
+    return (sys: string, usr: string, signal?: AbortSignal) => llm.chat(sys, usr, signal)
+  }
+  return (sys: string, usr: string, signal?: AbortSignal) => apiLLM.chat(sys, usr, signal)
+})
+
+const activeChatRawFn = computed(() => {
+  if (backend.value === 'webllm') {
+    return (msgs: { role: string; content: string }[], signal?: AbortSignal) => llm.chatRaw(msgs, signal)
+  }
+  return (msgs: { role: string; content: string }[], signal?: AbortSignal) => apiLLM.chatRaw(msgs, signal)
+})
+
+const activeModelLabel = computed(() => {
+  if (backend.value === 'webllm') {
+    return llm.currentModel.value.split('-').slice(0, 2).join('-')
+  }
+  return apiLLM.config.value.model || 'API'
+})
 
 const modelStatusText = computed(() => {
+  if (analysis.status.value === 'analyzing') {
+    return `${activeModelLabel.value} 分析中...`
+  }
+  if (analysis.status.value === 'done' && analysis.analysisTime.value) {
+    return activeModelLabel.value
+  }
+  if (backend.value === 'api') {
+    const label = apiLLM.config.value.model || ''
+    return label ? `${label} (API)` : 'API 未配置'
+  }
   if (llm.status.value === 'idle') return ''
   if (llm.status.value === 'downloading') return '下载中...'
   if (llm.status.value === 'loading') return '加载中...'
@@ -30,9 +69,7 @@ const modelStatusText = computed(() => {
 async function handleLoadModel() {
   try {
     await llm.loadModel(llm.currentModel.value)
-  } catch {
-    // error already set in composable
-  }
+  } catch {}
 }
 
 async function handleUnloadModel() {
@@ -47,7 +84,7 @@ async function handleAnalyze() {
   sceneText.value = input.value.trim()
   if (!sceneText.value) return
 
-  const result = await analysis.analyze(sceneText.value, (sys, usr) => llm.chat(sys, usr))
+  const result = await analysis.analyze(sceneText.value, activeChatFn.value, activeChatRawFn.value)
 
   if (result) {
     history.addEntry({
@@ -55,7 +92,8 @@ async function handleAnalyze() {
       timestamp: Date.now(),
       sceneText: sceneText.value,
       result,
-      modelUsed: llm.currentModel.value,
+      modelUsed: activeModelLabel.value,
+      analysisTime: analysis.analysisTime.value,
     })
   }
 }
@@ -64,6 +102,7 @@ function handleRestoreEntry(entry: HistoryEntry) {
   sceneText.value = entry.sceneText
   analysis.result.value = entry.result
   analysis.status.value = 'done'
+  analysis.analysisTime.value = entry.analysisTime || ''
   showHistory.value = false
 }
 
@@ -83,6 +122,7 @@ function exportMarkdown() {
   }
   md += '## 系统边界\n\n' + r.systemBoundary + '\n\n'
   if (r.stakeholders?.length) md += '## 干系人\n\n' + r.stakeholders.map(s=>'- '+s).join('\n') + '\n\n'
+  if (r.mainRequirement) md += '## 总体需求\n\n### ' + r.mainRequirement.name + '\n' + r.mainRequirement.description + '\n\n'
   if (r.functionalRequirements?.length) {
     md += '## 功能需求\n\n'
     r.functionalRequirements.forEach(fr => {
@@ -111,30 +151,42 @@ function exportMarkdown() {
 
 <template>
   <div class="app">
-    <AppHeader
-      :show-history="showHistory"
-      :model-status-text="modelStatusText"
+        <AppHeader
+          :show-history="showHistory"
+          :model-status-text="modelStatusText"
+          :analysis-time="analysis.analysisTime.value"
+          :analysis-status="analysis.status.value"
+          :backend="backend"
       @toggle-history="showHistory = !showHistory"
+      @toggle-settings="showSettings = !showSettings"
     />
 
     <main class="main">
       <div class="container">
-        <ModelSelector
-          :model-id="llm.currentModel.value"
-          :loading-status="llm.status.value"
-          :mirror-source="llm.mirrorSource.value"
-          @select-model="llm.currentModel.value = $event"
-          @load-model="handleLoadModel"
-          @unload-model="handleUnloadModel"
-          @update:mirror-source="llm.mirrorSource.value = $event"
-        />
+        <div class="backend-badge" :class="backend">
+          {{ backend === 'webllm' ? '🧠 WebLLM 本地' : '☁️ ' + apiLLM.config.value.model }}
+          <button class="backend-edit" @click="showSettings = true">⚙</button>
+        </div>
+
+        <template v-if="backend === 'webllm'">
+          <ModelSelector
+            :model-id="llm.currentModel.value"
+            :loading-status="llm.status.value"
+            :mirror-source="llm.mirrorSource.value"
+            @select-model="llm.currentModel.value = $event"
+            @load-model="handleLoadModel"
+            @unload-model="handleUnloadModel"
+            @update:mirror-source="llm.mirrorSource.value = $event"
+          />
+        </template>
 
         <SceneInput
           :model-status-text="modelStatusText"
           :model-progress="llm.progress.value.progress"
-          :model-ready="llm.status.value === 'ready'"
+          :model-ready="backend === 'api' ? true : llm.status.value === 'ready'"
           :analysis-status="analysis.status.value"
           @analyze="handleAnalyze"
+          @cancel="analysis.cancel"
         />
 
         <div v-if="analysis.error.value" class="error-banner">
@@ -144,7 +196,9 @@ function exportMarkdown() {
         <AnalysisResult
           v-if="analysis.result.value"
           :result="analysis.result.value"
+          :diagram-type="diagramType"
           @update:mermaid-code="analysis.result.value.mermaidCode = $event"
+          @update:diagram-type="diagramType = $event"
           @export-md="exportMarkdown"
         />
       </div>
@@ -164,6 +218,15 @@ function exportMarkdown() {
       @clear="history.clearAll"
       @close="showHistory = false"
     />
+
+    <ApiSettings
+      :visible="showSettings"
+      :backend="backend"
+      :api-config="apiLLM.config.value"
+      @update:visible="showSettings = $event"
+      @update:backend="backend = $event"
+      @update:api-config="apiLLM.updateConfig($event)"
+    />
   </div>
 </template>
 
@@ -178,9 +241,7 @@ function exportMarkdown() {
   --border: #dadce0;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -190,18 +251,26 @@ body {
   line-height: 1.5;
 }
 
-.app {
-  min-height: 100vh;
-}
+.app { min-height: 100vh; }
 
-.main {
-  padding: 24px;
-}
+.main { padding: 24px; }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
+.container { max-width: 1200px; margin: 0 auto; }
+
+.backend-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
 }
+.backend-badge.webllm { background: #e8f0fe; color: #1967d2; }
+.backend-badge.api { background: #e6f4ea; color: #137333; }
+.backend-edit { background: none; border: none; cursor: pointer; font-size: 14px; padding: 0; line-height: 1; opacity: .6; }
+.backend-edit:hover { opacity: 1; }
 
 .btn {
   display: inline-flex;
@@ -217,45 +286,15 @@ body {
   transition: all .15s;
   white-space: nowrap;
 }
-
-.btn-sm {
-  padding: 4px 10px;
-  font-size: 12px;
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: #fff;
-}
-
-.btn-primary:hover:not(:disabled) {
-  filter: brightness(1.1);
-}
-
-.btn-primary:disabled {
-  opacity: .5;
-  cursor: not-allowed;
-}
-
-.btn-outline {
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text);
-}
-
-.btn-outline:hover {
-  background: var(--bg);
-}
-
-.btn-ghost {
-  background: transparent;
-  color: var(--text-secondary);
-  border: none;
-}
-
-.btn-ghost:hover {
-  color: var(--text);
-}
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+.btn-outline { border: 1px solid var(--border); background: transparent; color: var(--text); }
+.btn-outline:hover { background: var(--bg); }
+.btn-danger { background: #fce8e6; color: #c5221f; border: 1px solid #f5c6cb; }
+.btn-danger:hover:not(:disabled) { background: #f5c6cb; }
+.btn-danger:disabled { opacity: .5; cursor: not-allowed; }
 
 .error-banner {
   background: #fce8e6;
