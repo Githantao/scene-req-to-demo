@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>场景需求分析器</title>
+<title>场景需求分析辅助工具</title>
 <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 <style>
@@ -12,7 +12,7 @@
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;border:none}.btn-sm{padding:4px 10px;font-size:12px}.btn-xs{padding:2px 8px;font-size:11px}.btn-lg{padding:12px 32px;font-size:16px}.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover:not(:disabled){filter:brightness(1.1)}.btn-primary:disabled{opacity:.5;cursor:not-allowed}.btn-outline{border:1px solid var(--border);background:transparent;color:var(--text)}.btn-outline:hover{background:var(--bg)}.btn-ghost{background:transparent;color:var(--text-secondary);border:none}.btn-ghost:hover{color:var(--text)}.btn-danger{background:#fce8e6;color:#c5221f;border:1px solid #f5c6cb}.btn-danger:hover:not(:disabled){background:#f5c6cb}.btn-danger:disabled{opacity:.5;cursor:not-allowed}.btn-ghost.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .btn-hero{display:block;width:100%;padding:14px 0;font-size:16px;font-weight:600;border-radius:10px;margin-top:12px}.hero-size{font-size:12px;color:var(--text-secondary);text-align:center;margin:4px 0 0}
 .main{padding:24px}.container{max-width:1200px;margin:0 auto}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}.card-title{font-size:12px;font-weight:600;color:var(--text-secondary);margin:0 0 8px;text-transform:uppercase;letter-spacing:.5px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}.card-collapsed{padding:0}.input-compact{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;border-radius:7px;transition:background .15s}.input-compact:hover{background:var(--bg)}.input-compact-label{font-size:13px;font-weight:600;white-space:nowrap;color:var(--text)}.input-compact-text{font-size:13px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}.card-title{font-size:20px;font-weight:700;color:var(--text);margin:0 0 8px;display:flex;align-items:center;gap:12px}.btn-primary-title{background:var(--primary);color:#fff;border:none;border-radius:6px;padding:6px 16px;font-size:16px;font-weight:600;cursor:pointer;transition:all .15s}.btn-primary-title:hover:not(:disabled){filter:brightness(1.1)}.btn-primary-title:disabled{opacity:.4;cursor:not-allowed}.btn-danger-title{background:#fce8e6;color:#c5221f;border:1px solid #f5c6cb;border-radius:6px;padding:6px 16px;font-size:16px;font-weight:600;cursor:pointer;transition:all .15s}.btn-danger-title:hover{background:#f5c6cb}
 .welcome-card{background:var(--surface);border:2px solid var(--primary);border-radius:12px;padding:32px;margin-bottom:16px;text-align:center}.welcome-card h2{font-size:22px;font-weight:700;margin:0 0 8px}.welcome-card p{font-size:14px;color:var(--text-secondary);margin:0 0 24px;line-height:1.6}.welcome-card .model-pick{display:flex;gap:8px;margin-bottom:8px;text-align:left}.welcome-card .model-pick select{flex:1}
 .welcome-card .btn-hero{display:block;width:100%;padding:14px 0;font-size:16px;font-weight:600;border-radius:10px}
 .row{display:flex;gap:8px}
@@ -25,13 +25,13 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite;margin-right:4px}@keyframes spin{to{transform:rotate(360deg)}}
 .error-banner{background:#fce8e6;border:1px solid #f5c6cb;color:#c5221f;padding:12px 16px;border-radius:8px;font-size:14px;margin-bottom:16px}
 .warn-banner{background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn-text);padding:12px 16px;border-radius:8px;font-size:14px;margin-bottom:16px;text-align:left}.warn-banner strong{display:block;margin-bottom:4px}.warn-banner code{background:rgba(0,0,0,.06);padding:1px 5px;border-radius:3px;font-size:12px}
-.split{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}.split-pane{flex:1;padding:20px;overflow-y:auto;max-height:70vh}.split-div{width:1px;background:var(--border)}@media(max-width:768px){.split{flex-direction:column}.split-div{width:100%;height:1px}}
+.split{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}.split-pane{padding:20px}.split-pane:first-child{flex:none}.split-pane:last-child{flex:1;min-height:400px}.split-div{height:1px;background:var(--border)}
 .report-title{font-size:20px;font-weight:700;margin:0 0 16px}
 .layers-row{display:flex;align-items:stretch;gap:8px;margin-bottom:20px}@media(max-width:600px){.layers-row{flex-direction:column}}.layer-card{flex:1;border-radius:8px;padding:12px;display:flex;gap:10px;align-items:flex-start}.layer-biz{background:#e8f0fe;border:1px solid #c5d9f7}.layer-user{background:#e6f4ea;border:1px solid #b7dfc5}.layer-sys{background:#fef7e0;border:1px solid #fde8b3}.layer-icon{font-size:20px;line-height:1}.layer-body{min-width:0}.layer-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.6;margin-bottom:2px}.layer-title{font-size:13px;font-weight:600;line-height:1.4;margin-bottom:2px}.layer-desc{font-size:11px;color:var(--text-secondary);line-height:1.4}.layer-arrow{display:flex;align-items:center;color:var(--text-secondary);font-size:18px;padding:0 2px}@media(max-width:600px){.layer-arrow{transform:rotate(90deg);padding:2px 0;justify-content:center}}
-.sec{margin-bottom:20px}.sec-h{font-size:14px;font-weight:600;color:var(--text-secondary);margin:0 0 8px;text-transform:uppercase;letter-spacing:.5px}.sec-p{font-size:14px;line-height:1.6;margin:0}.tag{font-size:12px;padding:2px 8px;border-radius:4px;font-weight:500;display:inline-block}.tag-list{display:flex;flex-wrap:wrap;gap:6px}.tag-b{background:#e8f0fe;color:#1967d2}.tag-r{background:#fce8e6;color:#c5221f}.tag-y{background:#fef7e0;color:#ea8600}.tag-g{background:#e6f4ea;color:#137333}.tag-gy{background:#f1f3f4;color:#5f6368}
+.sec{margin-bottom:20px}.sec-h{font-size:14px;font-weight:600;color:var(--text-secondary);margin:0 0 8px;text-transform:uppercase;letter-spacing:.5px}.sec-h.collapsible{cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}.sec-h.collapsible:hover{color:var(--text)}.collapse-icon{font-size:10px;width:12px;text-align:center;flex-shrink:0}.sec-p{font-size:14px;line-height:1.6;margin:0}.tag{font-size:12px;padding:2px 8px;border-radius:4px;font-weight:500;display:inline-block}.tag-list{display:flex;flex-wrap:wrap;gap:6px}.tag-b{background:#e8f0fe;color:#1967d2}.tag-r{background:#fce8e6;color:#c5221f}.tag-y{background:#fef7e0;color:#ea8600}.tag-g{background:#e6f4ea;color:#137333}.tag-gy{background:#f1f3f4;color:#5f6368}
 .req-card{border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px}.req-h{display:flex;align-items:center;gap:8px;margin-bottom:4px}.req-id{font-size:11px;font-weight:700;color:var(--primary);font-family:monospace}.btn-fr-copy{margin-left:auto;font-size:11px;padding:1px 8px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text-secondary);cursor:pointer;line-height:1.5}.btn-fr-copy:hover{background:var(--bg);color:var(--text)}.req-n{font-size:14px;font-weight:600;margin:4px 0}.req-d{font-size:13px;color:var(--text-secondary);margin:0;line-height:1.5}
 .df-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}.df-item:last-child{border-bottom:none}.df-s,.df-t{font-weight:500}.df-a{color:var(--primary)}.df-d{color:var(--text-secondary);flex:1}.nfr{margin:0;padding-left:20px}.nfr li{font-size:13px;line-height:1.6;margin-bottom:4px}
-.diagram-box{overflow:auto;background:#fff;border-radius:8px;border:1px solid var(--border);padding:16px;min-height:200px}.diagram-box svg{max-width:100%;height:auto}
+.diagram-box{overflow:auto;background:#fff;border-radius:8px;border:1px solid var(--border);padding:16px;min-height:300px;display:flex;align-items:flex-start;justify-content:center}.diagram-box svg{max-width:100%;height:auto;display:block}
 .merr{border:1px solid #f5c6cb;background:#fce8e6;border-radius:8px;padding:12px}.merr-t{font-size:14px;font-weight:600;color:#c5221f;margin:0 0 8px}.merr-d{font-size:12px;color:#c5221f;white-space:pre-wrap;margin:0}
 .code-editor{margin-top:12px}.editor-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}.editor-label{font-size:11px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:.5px}.editor-actions{display:flex;align-items:center;gap:6px}.editor-hint{font-size:11px;color:var(--primary);font-style:italic}.editor-textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:#1e1e1e;color:#d4d4d4;font-family:'SF Mono','Menlo','Monaco','Courier New',monospace;font-size:12px;line-height:1.5;resize:vertical;min-height:80px;tab-size:2}.editor-textarea:focus{outline:none;border-color:var(--primary)}
 .diagram-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:var(--primary);color:#fff;margin-left:6px;vertical-align:middle;text-transform:uppercase;letter-spacing:.3px}
@@ -45,8 +45,7 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
 .hist-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:900;display:flex;justify-content:flex-end}.hist-panel{width:360px;max-width:90vw;background:var(--surface);height:100%;display:flex;flex-direction:column;box-shadow:-4px 0 20px rgba(0,0,0,.1)}.hist-h{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}.hist-h h2{font-size:16px;font-weight:600;margin:0}.hist-actions{display:flex;gap:8px}.hist-body{flex:1;overflow-y:auto;padding:12px}.hist-item{position:relative;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all .15s}.hist-item:hover{border-color:var(--primary);background:var(--bg)}.hist-ih{display:flex;align-items:center;gap:8px;margin-bottom:4px}.hist-it{font-size:14px;font-weight:600}.hist-im{font-size:11px;color:var(--primary);background:var(--primary-alpha);padding:1px 6px;border-radius:3px}.hist-tm{font-size:10px;color:var(--text-secondary);padding:1px 4px}{font-size:12px;color:var(--text-secondary);margin:4px 0;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hist-itime{font-size:11px;color:var(--text-secondary);opacity:.7}.hist-del{position:absolute;top:8px;right:8px;background:none;border:none;font-size:14px;cursor:pointer;opacity:0;transition:opacity .15s;padding:4px}.hist-item:hover .hist-del{opacity:.5}.hist-item:hover .hist-del:hover{opacity:1}.hist-empty{text-align:center;color:var(--text-secondary);font-size:14px;margin-top:40px}
 .ver-badge{font-size:11px;font-weight:600;color:var(--text-secondary);background:var(--bg);padding:1px 6px;border-radius:3px;margin-left:4px}
 .btn-ver{padding:4px 8px;font-size:13px}
-.backend-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;margin-bottom:12px;margin-top:4px}.backend-badge.webllm{background:#e8f0fe;color:#1967d2}.backend-badge.api{background:#e6f4ea;color:#137333}.backend-edit{background:none;border:none;cursor:pointer;font-size:14px;padding:0;line-height:1;opacity:.6}.backend-edit:hover{opacity:1}
-.as-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:900;display:flex;align-items:center;justify-content:center}.as-panel{width:480px;max-width:90vw;max-height:85vh;background:var(--surface);border-radius:12px;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2)}.as-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}.as-header h2{font-size:16px;font-weight:600;margin:0}.as-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-secondary);padding:4px}.as-close:hover{color:var(--text)}.as-body{flex:1;overflow-y:auto;padding:16px 20px}.as-section{margin-bottom:14px}.as-label{display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}.as-input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:14px}.as-input::placeholder{color:var(--text-secondary);opacity:.5}.as-select{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:14px;cursor:pointer}.as-hint{font-size:11px;color:var(--text-secondary);margin:4px 0 0}.as-range{width:100%;margin:4px 0;accent-color:var(--primary)}.as-range-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-secondary)}.as-backend-row{display:flex;gap:8px}.as-radio{flex:1;display:flex;align-items:center;gap:6px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;font-size:13px}.as-radio.active{border-color:var(--primary);background:var(--primary-alpha)}.as-radio input{display:none}.as-cors-notice{background:#fef7e0;border:1px solid #f9d849;border-radius:8px;padding:12px;font-size:12px;color:#5f3b00;line-height:1.5}.as-cors-notice strong{display:block;margin-bottom:4px}.as-cors-notice p{margin:4px 0}.as-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--border)}.as-model-group{display:flex;flex-direction:column;gap:4px}.as-model-custom{margin-top:4px}.as-test-row{display:flex;align-items:center;gap:8px}.as-test-ok{font-size:12px;color:#137333}.as-test-err{font-size:12px;color:#c5221f}
+.as-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:900;display:flex;align-items:center;justify-content:center}.as-panel{width:480px;max-width:90vw;max-height:85vh;background:var(--surface);border-radius:12px;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2)}.as-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}.as-header h2{font-size:16px;font-weight:600;margin:0}.as-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-secondary);padding:4px}.as-close:hover{color:var(--text)}.as-body{flex:1;overflow-y:auto;padding:16px 20px}.as-section{margin-bottom:14px}.as-label{display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}.as-input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:14px}.as-input::placeholder{color:var(--text-secondary);opacity:.5}.as-select{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:14px;cursor:pointer}.as-hint{font-size:11px;color:var(--text-secondary);margin:4px 0 0}.as-range{width:100%;margin:4px 0;accent-color:var(--primary)}.as-range-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-secondary)}.as-backend-row{display:flex;gap:8px}.as-radio{flex:1;display:flex;align-items:center;gap:6px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;font-size:13px}.as-radio.active{border-color:var(--primary);background:var(--primary-alpha)}.as-radio input{display:none}.as-cors-notice{background:#fef7e0;border:1px solid #f9d849;border-radius:8px;padding:12px;font-size:12px;color:#5f3b00;line-height:1.5}.as-cors-notice strong{display:block;margin-bottom:4px}.as-cors-notice p{margin:4px 0}.as-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--border)}.as-model-group{display:flex;flex-direction:column;gap:4px}.as-model-custom{margin-top:4px}.as-test-row{display:flex;align-items:center;gap:8px}.as-test-ok{font-size:12px;color:#137333}.as-test-err{font-size:12px;color:#c5221f}.as-mirror-row{display:flex;gap:6px}.as-radio-sm{flex:1;display:flex;align-items:center;gap:5px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all .15s;font-size:12px}.as-radio-sm.active{border-color:var(--primary);background:var(--primary-alpha)}.as-radio-sm input{display:none}.as-model-status{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-radius:6px;border:1px solid var(--border)}.as-status-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500}.as-status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}.as-dot-green{background:#137333}.as-dot-red{background:#c5221f}.as-dot-gray{background:#9aa0a6}.as-spinner-xs{display:inline-block;width:10px;height:10px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite}.as-pb{height:4px;background:var(--border);border-radius:2px;overflow:hidden}.as-pb-fill{height:100%;background:var(--primary);border-radius:2px;transition:width .3s ease}.as-cache-info{font-size:11px;color:var(--text-secondary);margin-top:4px}.btn-block{width:100%;justify-content:center}
 .rn-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:950;display:flex;align-items:center;justify-content:center}.rn-panel{width:500px;max-width:90vw;max-height:80vh;background:var(--surface);border-radius:12px;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2)}.rn-h{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}.rn-h div{display:flex;align-items:center;gap:8px}.rn-h h2{font-size:16px;font-weight:600;margin:0}.rn-ver-badge{font-size:11px;font-weight:700;background:var(--primary);color:#fff;padding:2px 8px;border-radius:4px}.rn-body{flex:1;overflow-y:auto;padding:16px 20px}.rn-item{padding:12px 0;border-bottom:1px solid var(--border)}.rn-item.active{background:var(--primary-alpha);margin:-8px -12px;padding:12px;border-radius:8px;border-bottom-color:transparent}.rn-item:last-child{border-bottom:none}.rn-ver{font-size:15px;font-weight:700;color:var(--text)}.rn-date{font-size:11px;color:var(--text-secondary);margin:2px 0 6px}.rn-list{margin:0;padding-left:18px}.rn-list li{font-size:13px;line-height:1.6;color:var(--text)}
 </style>
 </head>
@@ -56,8 +55,8 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
     <!-- header -->
     <div class="header">
       <div class="header-left">
-        <h1>场景需求分析器</h1>
-        <span class="sub">自然语言 → 系统需求 + 流程图 <span class="ver-badge">v2.2.0</span></span>
+        <h1>场景需求分析辅助工具</h1>
+        <span class="sub">自然语言 → 系统需求 + 流程图 <span class="ver-badge">v2.6.0</span></span>
       </div>
       <div class="header-right">
         <span class="model-status">{{ modelStatusText }}</span>
@@ -85,6 +84,7 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
           <p style="margin:4px 0">本工具需要 WebGPU 来运行 AI 模型。当前页面是通过 <code>file://</code> 直接打开的，Chrome 出于安全原因禁用了 WebGPU。</p>
           <p style="margin:4px 0"><b>方案一（推荐）：</b>用任意静态服务器托管此页面，例如在文件所在目录执行：<br><code style="display:inline-block;margin:4px 0">python3 -m http.server 8080</code><br>然后用 Chrome 打开 <code>http://localhost:8080/analyzer.html</code></p>
           <p style="margin:4px 0"><b>方案二：</b>Chrome 地址栏输入 <code>chrome://flags/#enable-unsafe-webgpu</code>，设为 Enabled，重启浏览器后即可从 <code>file://</code> 使用。</p>
+          <p style="margin:4px 0"><b>方案三：</b><button class="btn btn-sm btn-primary" @click="skipToApi" style="font-size:12px;padding:4px 12px;display:inline-flex">跳过 WebLLM，使用第三方 API →</button></p>
         </div>
 
         <!-- model load error -->
@@ -92,7 +92,7 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
 
         <!-- FIRST USE welcome -->
         <div v-if="showWelcome && !webgpuWarn" class="welcome-card">
-          <h2>欢迎使用场景需求分析器</h2>
+          <h2>欢迎使用场景需求分析辅助工具</h2>
           <p>这是一个完全在浏览器本地运行的 AI 工具。输入自然语言场景描述，自动提取结构化系统需求，并生成 Mermaid 流程图。所有处理都在本地完成。</p>
           <div class="model-pick">
             <select v-model="currentModel" :disabled="downloadingNow">
@@ -109,54 +109,34 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
             <span v-if="downloadingNow" class="spinner"></span>
             {{ downloadingNow ? '下载中...' : '首次使用 — 开始下载模型' }}
           </button>
+          <div style="margin-top:12px;text-align:center;border-top:1px solid var(--border);padding-top:12px">
+            <button class="btn btn-outline" style="font-size:13px" @click="skipToApi">跳过 WebLLM，使用第三方 API →</button>
+          </div>
         </div>
 
         <!-- normal UI (shown after model is cached) -->
         <template v-if="!showWelcome && !webgpuWarn">
-          <div :class="'backend-badge '+backend">
-            {{ backend==='webllm' ? '🧠 WebLLM 本地' : '☁️ '+apiConfig.model }}
-            <button class="backend-edit" @click="openSettings">⚙</button>
+          <div class="card" :class="{'card-collapsed': collapseInput && result}">
+            <div v-if="collapseInput && result" class="input-compact" @click="collapseInput=false">
+              <span class="input-compact-label">场景描述</span>
+              <span class="input-compact-text">{{ sceneText.slice(0,80) }}{{ sceneText.length>80?'...':'' }}</span>
+              <button class="btn btn-sm btn-outline" @click.stop="collapseInput=false">展开</button>
+            </div>
+            <template v-else>
+              <div class="card-title">
+                场景描述
+                <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+                  <span v-if="backend==='webllm'&&llmStatus!=='ready'&&llmStatus!=='downloading'&&llmStatus!=='loading'" class="hint">请先加载模型</span>
+                  <span v-if="backend==='api'&&!apiConfig.apiKey&&apiConfig.value.provider!=='ollama'" class="hint">请先在 ⚙ 设置中配置 API Key</span>
+                  <button v-if="analysisStatus!=='analyzing'" class="btn-primary-title" :disabled="(backend==='webllm'&&llmStatus!=='ready')" @click="analyze">开始分析</button>
+                  <button v-else class="btn-danger-title" @click="cancelAnalysis"><span class="spinner"></span>停止分析</button>
+                </div>
+              </div>
+              <textarea v-model="sceneText" :placeholder="'描述你的系统场景，例如：\n「我需要在校园内实现一个共享单车系统，学生可以通过手机扫码解锁单车，骑行结束后上锁结算。管理员可以在后台管理单车和查看使用统计。」'"></textarea>
+            </template>
           </div>
-
-          <div v-if="backend==='webllm'" class="card">
-            <div class="card-title">模型选择</div>
-            <div class="row">
-              <select v-model="currentModel" :disabled="llmStatus==='downloading'||llmStatus==='loading'">
-                <option v-for="m in modelOptions" :key="m.id" :value="m.id">{{ m.label }} ({{ m.size }})</option>
-              </select>
-              <button v-if="llmStatus==='ready'" class="btn btn-sm btn-outline" @click="unloadModel">卸载</button>
-              <button v-else class="btn btn-sm btn-primary" :disabled="llmStatus==='downloading'||llmStatus==='loading'" @click="loadModel">
-                {{ llmStatus==='downloading'||llmStatus==='loading'?'加载中...':'加载模型' }}
-              </button>
             </div>
-            <div class="desc">{{ modelDesc }}</div>
-            <div class="mirror-row">
-              <span class="mirror-label">下载源</span>
-              <label class="mirror-toggle">
-                <input type="radio" v-model="mirrorSource" value="auto" :disabled="llmStatus==='downloading'||llmStatus==='loading'">
-                <span>自动</span>
-              </label>
-              <label class="mirror-toggle">
-                <input type="radio" v-model="mirrorSource" value="china" :disabled="llmStatus==='downloading'||llmStatus==='loading'">
-                <span>国内镜像</span>
-              </label>
-            </div>
-            <div class="cache-row">
-              <span class="cache-size">{{ cacheEntries>0?'缓存: '+cacheSize:'无缓存' }} <button class="cache-refresh" @click="scanCache">↻</button></span>
-              <button v-if="cacheEntries>0" class="btn btn-xs btn-danger" :disabled="isClearing" @click="clearModelCache">{{ isClearing?'清除中...':'清除缓存' }}</button>
-            </div>
-            <details class="copy-help"><summary>如何从其他电脑复制已缓存的模型</summary><ol><li>在已下载模型的电脑上打开 Chrome，地址栏输入 <code>chrome://version/</code>，找到"个人资料路径"</li><li>关闭 Chrome，进入该路径的父目录，找到 <code>Default/IndexedDB</code> 和 <code>Default/File System</code> 目录</li><li>将这两个目录复制到新电脑的相同位置</li><li>重新打开本页面，缓存即可生效</li></ol><p style="margin:6px 0 0;font-size:11px"><strong>提示：</strong>每台电脑只需下载一次，后续离线可用。直接在新电脑上下载是最简单的方式。</p></details>
-          </div>
-
-          <div class="card">
-            <div class="card-title">场景描述</div>
             <textarea v-model="sceneText" :placeholder="'描述你的系统场景，例如：\n「我需要在校园内实现一个共享单车系统，学生可以通过手机扫码解锁单车，骑行结束后上锁结算。管理员可以在后台管理单车和查看使用统计。」'"></textarea>
-            <div class="footer">
-              <button v-if="analysisStatus!=='analyzing'" class="btn btn-primary" :disabled="(backend==='webllm'&&llmStatus!=='ready')" @click="analyze">分析</button>
-              <button v-else class="btn btn-danger" @click="cancelAnalysis"><span class="spinner"></span>停止</button>
-              <span v-if="backend==='webllm'&&llmStatus!=='ready'&&llmStatus!=='downloading'&&llmStatus!=='loading'" class="hint">请先加载模型</span>
-              <span v-if="backend==='api'&&!apiConfig.apiKey&&apiConfig.provider!=='ollama'" class="hint">请先在 ⚙ 设置中配置 API Key</span>
-            </div>
           </div>
 
           <div v-if="analysisError" class="error-banner">{{ analysisError }}</div>
@@ -198,34 +178,40 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
 
               <div class="sec"><div class="sec-h">系统边界</div><p class="sec-p">{{ result.requirements.systemBoundary }}</p></div>
               <div class="sec"><div class="sec-h">干系人</div><div class="tag-list"><span v-for="s in result.requirements.stakeholders" :key="s" class="tag tag-b">{{ s }}</span></div><p v-if="!result.requirements.stakeholders.length" class="empty-msg">无干系人</p></div>
-              <div class="sec"><div class="sec-h">功能需求</div>
+              <div class="sec"><div class="sec-h collapsible" @click="collapseFR=!collapseFR"><span class="collapse-icon">{{ collapseFR?'▶':'▼' }}</span>功能需求</div>
                 <div v-if="result.requirements.mainRequirement" class="main-req-card">
                   <div class="main-req-label">总体需求<button class="btn-fr-copy" @click="onCopyMainReq(result.requirements.mainRequirement)">复制</button></div>
                   <div class="main-req-name">{{ result.requirements.mainRequirement.name }}</div>
                   <p class="main-req-desc">{{ result.requirements.mainRequirement.description }}</p>
                 </div>
-                <div v-for="fr in result.requirements.functionalRequirements" :key="fr.id" class="req-card">
-                  <div class="req-h"><span class="req-id">{{ fr.id }}</span><span class="tag" :class="fr.priority==='high'?'tag-r':fr.priority==='medium'?'tag-y':'tag-gy'">{{ fr.priority==='high'?'高':fr.priority==='medium'?'中':'低' }}</span><button class="btn-fr-copy" @click="onCopyFr(fr)">复制</button></div>
-                  <div class="req-n">{{ fr.name }}</div><p class="req-d">{{ fr.description }}</p>
-                </div>
-                <p v-if="!result.requirements.functionalRequirements.length" class="empty-msg">无功能需求</p>
+                <template v-if="!collapseFR">
+                  <div v-for="fr in result.requirements.functionalRequirements" :key="fr.id" class="req-card">
+                    <div class="req-h"><span class="req-id">{{ fr.id }}</span><span class="tag" :class="fr.priority==='high'?'tag-r':fr.priority==='medium'?'tag-y':'tag-gy'">{{ fr.priority==='high'?'高':fr.priority==='medium'?'中':'低' }}</span><button class="btn-fr-copy" @click="onCopyFr(fr)">复制</button></div>
+                    <div class="req-n">{{ fr.name }}</div><p class="req-d">{{ fr.description }}</p>
+                  </div>
+                  <p v-if="!result.requirements.functionalRequirements.length" class="empty-msg">无功能需求</p>
+                </template>
               </div>
-              <div class="sec"><div class="sec-h">数据流</div>
-                <div v-for="(df,i) in result.requirements.dataFlows" :key="i" class="df-item">
-                  <span class="df-s">{{ df.from }}</span><span class="df-a">→</span><span class="df-t">{{ df.to }}</span><span class="df-d">({{ df.data }})</span>
-                  <span class="tag" :class="df.type==='input'?'tag-g':df.type==='output'?'tag-b':'tag-gy'" style="margin-left:auto">{{ df.type==='input'?'输入':df.type==='output'?'输出':'存储' }}</span>
-                </div>
-                <p v-if="!result.requirements.dataFlows.length" class="empty-msg">无数据流</p>
+              <div class="sec"><div class="sec-h collapsible" @click="collapseDF=!collapseDF"><span class="collapse-icon">{{ collapseDF?'▶':'▼' }}</span>数据流</div>
+                <template v-if="!collapseDF">
+                  <div v-for="(df,i) in result.requirements.dataFlows" :key="i" class="df-item">
+                    <span class="df-s">{{ df.from }}</span><span class="df-a">→</span><span class="df-t">{{ df.to }}</span><span class="df-d">({{ df.data }})</span>
+                    <span class="tag" :class="df.type==='input'?'tag-g':df.type==='output'?'tag-b':'tag-gy'" style="margin-left:auto">{{ df.type==='input'?'输入':df.type==='output'?'输出':'存储' }}</span>
+                  </div>
+                  <p v-if="!result.requirements.dataFlows.length" class="empty-msg">无数据流</p>
+                </template>
               </div>
-              <div class="sec"><div class="sec-h">非功能性需求</div>
-                <ul v-if="result.requirements.nonFunctionalRequirements.length" class="nfr"><li v-for="(nfr,i) in result.requirements.nonFunctionalRequirements" :key="i">{{ nfr }}</li></ul>
-                <p v-else class="empty-msg">无非功能性需求</p>
+              <div class="sec"><div class="sec-h collapsible" @click="collapseNFR=!collapseNFR"><span class="collapse-icon">{{ collapseNFR?'▶':'▼' }}</span>非功能性需求</div>
+                <template v-if="!collapseNFR">
+                  <ul v-if="result.requirements.nonFunctionalRequirements.length" class="nfr"><li v-for="(nfr,i) in result.requirements.nonFunctionalRequirements" :key="i">{{ nfr }}</li></ul>
+                  <p v-else class="empty-msg">无非功能性需求</p>
+                </template>
               </div>
             </div>
             <div class="split-div"></div>
             <div class="split-pane">
               <div class="sec-h" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-                <span>系统流程图 <span v-if="result.requirements.diagramType" class="diagram-badge">{{ diagramLabel(selectedDiagramType) }}</span></span>
+                <span>需求场景流程图 <span v-if="result.requirements.diagramType" class="diagram-badge">{{ diagramLabel(selectedDiagramType) }}</span></span>
                 <select v-if="result.requirements" class="dia-select" :value="selectedDiagramType" @change="onDiagramTypeChange($event.target.value)">
                   <option v-for="opt in diagramOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                 </select>
@@ -239,7 +225,10 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
                   <span class="editor-label">编辑 Mermaid 代码</span>
                   <div class="editor-actions">
                     <span v-if="editorDirty" class="editor-hint">已修改·自动渲染</span>
-                    <button class="btn btn-xs btn-outline" @click="copyCode">复制</button>
+                    <button class="btn btn-xs btn-outline" @click="openDiagramInNewTab">新标签页</button>
+                    <button class="btn btn-xs btn-outline" @click="copyDiagramAsImage">复制图片</button>
+                    <button class="btn btn-xs btn-outline" @click="saveDiagramAsImage">保存图片</button>
+                    <button class="btn btn-xs btn-outline" @click="copyCode">复制代码</button>
                     <button class="btn btn-xs btn-ghost" @click="showEditor=!showEditor">
                       {{ showEditor?'收起':'展开' }}
                     </button>
@@ -317,6 +306,54 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
               <label class="as-radio" :class="{active:backend==='api'}"><input type="radio" v-model="backend" value="api"><span>第三方 API</span></label>
             </div>
           </div>
+          <template v-if="backend==='webllm'">
+            <div class="as-section">
+              <label class="as-label">本地模型</label>
+              <select class="as-select" v-model="currentModel" :disabled="llmStatus==='downloading'||llmStatus==='loading'">
+                <option v-for="m in modelOptions" :key="m.id" :value="m.id">{{ m.label }}（{{ m.size }}）— {{ m.description }}</option>
+              </select>
+            </div>
+            <div class="as-section">
+              <label class="as-label">下载源</label>
+              <div class="as-mirror-row">
+                <label class="as-radio-sm" :class="{active:mirrorSource==='auto'}"><input type="radio" v-model="mirrorSource" value="auto" :disabled="llmStatus==='downloading'||llmStatus==='loading'"><span>自动（GitHub）</span></label>
+                <label class="as-radio-sm" :class="{active:mirrorSource==='china'}"><input type="radio" v-model="mirrorSource" value="china" :disabled="llmStatus==='downloading'||llmStatus==='loading'"><span>国内镜像</span></label>
+              </div>
+              <p class="as-hint" style="margin-top:4px">国内镜像使用 <code>hf-mirror.com</code> 下载模型权重，下载速度更快</p>
+            </div>
+            <div class="as-section">
+              <label class="as-label">模型状态</label>
+              <div class="as-model-status">
+                <span class="as-status-badge" :class="'as-'+llmStatus">
+                  <span v-if="llmStatus==='idle'" class="as-status-dot as-dot-gray"></span>
+                  <span v-if="llmStatus==='downloading'||llmStatus==='loading'" class="as-spinner-xs"></span>
+                  <span v-if="llmStatus==='ready'" class="as-status-dot as-dot-green"></span>
+                  <span v-if="llmStatus==='error'" class="as-status-dot as-dot-red"></span>
+                  {{ llmStatus==='idle'?'未下载':llmStatus==='downloading'?'下载中…':llmStatus==='loading'?'加载中…':llmStatus==='ready'?'已就绪':'加载失败' }}
+                </span>
+                <div style="display:flex;gap:6px;margin-left:auto">
+                  <button v-if="llmStatus==='ready'" class="btn btn-sm btn-outline" @click="unloadModel" style="font-size:11px">卸载</button>
+                  <button class="btn btn-sm btn-outline" @click="clearModelCache" :disabled="isClearing||!cacheSize" style="font-size:11px">清除缓存</button>
+                </div>
+              </div>
+              <div v-if="llmProgress>0||llmProgressText" style="margin-top:6px">
+                <div class="as-pb"><div class="as-pb-fill" :style="{width:(llmProgress*100)+'%'}"></div></div>
+                <p class="as-hint" style="margin-top:2px">{{ llmProgressText }}</p>
+              </div>
+              <div v-if="cacheSize" class="as-cache-info"><span>缓存：{{ cacheSize }}（{{ cacheEntries }} 项）</span></div>
+            </div>
+            <div class="as-section">
+              <button class="btn btn-primary btn-block" :disabled="llmStatus==='downloading'||llmStatus==='loading'||llmStatus==='ready'" @click="loadModel">
+                <span v-if="llmStatus==='downloading'||llmStatus==='loading'" class="as-spinner-xs"></span>
+                {{ llmStatus==='downloading'?'下载中…':llmStatus==='loading'?'加载中…':llmStatus==='ready'?'模型已就绪':'下载模型（'+modelOptions.find(m=>m.id===currentModel)?.size+'）' }}
+              </button>
+            </div>
+            <div class="as-cors-notice">
+              <strong>ℹ WebLLM 说明</strong>
+              <p>模型首次下载需 {{ modelOptions.find(m=>m.id===currentModel)?.size }} 左右，下载后自动缓存。</p>
+              <p>需要 Chrome 113+ 且支持 WebGPU。如无法使用，请切换到「第三方 API」后端。</p>
+            </div>
+          </template>
           <template v-if="backend==='api'">
             <div class="as-section">
               <label class="as-label">API 提供商</label>
@@ -381,13 +418,13 @@ textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--border)
 
 <script type="module">
 let CreateMLCEngine;
+let webllmCdnError = '';
 try {
   const mod = await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.83/+esm');
   CreateMLCEngine = mod.CreateMLCEngine;
 } catch(e) {
   console.error('WebLLM CDN load failed:', e);
-  document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:sans-serif"><h2>WebLLM 引擎加载失败</h2><p style="color:#666;margin:16px 0">无法从 CDN 加载 AI 推理引擎。可能是网络问题，请尝试：</p><ol style="text-align:left;max-width:400px;margin:0 auto;line-height:1.8"><li>刷新页面重试</li><li>检查网络连接</li><li>或使用 <code>npm run dev</code> 启动本地服务器</li></ol><p style="margin-top:20px;font-size:12px;color:#999">错误: ' + (e.message||'') + '</p></div>';
-  throw e;
+  webllmCdnError = e.message || 'CDN 加载失败';
 }
 
 const { createApp, ref, computed, nextTick, watch } = Vue;
@@ -407,7 +444,7 @@ const MODEL_LIBS = {
 const STORAGE_KEY = 'scene-to-req-history';
 const MAX_HISTORY = 50;
 
-const SYSTEM_PROMPT = '你是一个资深的系统需求分析师 + Mermaid 图表专家。你的任务是根据用户描述的自然语言场景，提炼出严格、完整的系统需求，并生成最合适的 Mermaid 图表。\n\n输出格式：\n\n{\n  "requirements": {\n    "title": "系统名称",\n    "diagramType": "flowchart",\n    "layers": {\n      "business": { "goal": "业务目标", "value": "业务价值" },\n      "user": { "scenario": "用户场景", "painPoints": ["痛点"] },\n      "system": { "summary": "系统职责" }\n    },\n    "mainRequirement": {\n      "name": "总体需求名称",\n      "description": "对该需求的概括描述"\n    },\n    "systemBoundary": "系统边界",\n    "stakeholders": ["干系人"],\n    "functionalRequirements": [\n      { "id": "FR-1", "name": "功能名", "description": "描述（必须可测试）", "priority": "high|medium|low" }\n    ],\n    "dataFlows": [\n      { "from": "来源", "to": "目标", "data": "数据", "type": "input|output|storage" }\n    ],\n    "nonFunctionalRequirements": ["硬性约束 / 假设"]\n  },\n  "mermaidCode": "..."\n}\n\n需求分析规则：\\n1. JSON 必须严格合法\\n2. layers 必须包含 business/user/system 三层\\n3. 分析过程：先识别出 1 条核心/总体需求（mainRequirement），然后将其拆解为若干子功能需求（functionalRequirements），每个子 FR 必须与主需求有明确的派生关系\\n4. 区分"需要什么"（系统能力）和"怎么做"（UI/实现细节）。每个功能需求代表一个完整的业务能力，而非具体的操作步骤\\n5. 每条功能需求必须可测试\\n6. mainRequirement 恰 1 条，functionalRequirements 2-6 条。粒度控制在系统分析层面——如 FR-1 "用户登录认证"✅ 而非"显示登录页/输入用户名/点击登录按钮"❌\\n7. 所有描述使用中文\n\n图表类型选择规则（根据场景内容自动选择最合适的类型）：\n\n1. flowchart — 业务流程、工作流、决策树、用户操作路径、有明确步骤顺序的场景\n   语法：flowchart TD（自上而下），用 subgraph 分组，{} 菱形表示决策点\n   示例：\\nflowchart TD\\n  A[登录] --> B{验证}\\n  B -->|成功| C[首页]\\n  B -->|失败| D[错误提示]\n\n2. sequenceDiagram — API 交互、系统间通信、登录流程、多方协作、有时间顺序的消息传递、系统侧多条件验证与联锁逻辑\\n   语法：sequenceDiagram，actor 表示用户，participant 表示系统，->> 实线请求，-->> 虚线返回\\n   示例：\\\\nsequenceDiagram\\\\n  actor 用户\\\\n  participant 前端\\\\n  participant 后端\\\\n  用户->>前端: 提交表单\\\\n  前端->>后端: POST /api\\\\n  后端-->>前端: 返回结果\\\\n  前端-->>用户: 显示成功\n\n3. classDiagram — 系统架构、数据模型、类关系、面向对象设计、模块依赖\n   语法：classDiagram，<|-- 继承，*-- 组合，o-- 聚合，--> 关联\n   示例：\\nclassDiagram\\n  class 用户 {\\n    +id\\n    +登录()\\n  }\\n  class 订单 {\\n    +金额\\n    +支付()\\n  }\\n  用户 --> 订单\n\n4. stateDiagram-v2 — 状态机、生命周期、状态流转、工作流状态、审批流程\n   语法：stateDiagram-v2，[*] 开始/结束，--> 状态转换\\n  示例：\\nstateDiagram-v2\\n  [*] --> 待审核\\n  待审核 --> 通过\\n  待审核 --> 驳回\\n  通过 --> [*]\\n  驳回 --> 待审核\n\n5. erDiagram — 数据库设计、实体关系、数据表结构、字段定义\n   语法：erDiagram，||--o{ 一对多，||--|| 一对一，}o--|| 多对一\\n  示例：\\nerDiagram\\n  用户 ||--o{ 订单 : 下单\\n  订单 ||--|{ 订单项 : 包含\\n  商品 ||--o{ 订单项 : 被购买\n\n选择优先级：\n- 涉及多方交互、API 调用、消息传递 → sequenceDiagram\n- 涉及状态转换、审批流程、生命周期 → stateDiagram-v2\n- 涉及数据库、数据实体、字段定义 → erDiagram\n- 涉及类、模块、接口、继承关系 → classDiagram\n- 以上都不符合，或纯步骤流程 → flowchart\n\nMermaid 生成规则（严格遵循）：\n1. 所有标签和描述使用中文\n2. 节点命名使用固定格式 [动词+名词]（如 提交订单、确认支付、生成报告），每次分析对相同概念使用相同命名\n3. 流程图结构固定顺序：输入步骤 → 核心处理 → 分支决策 → 输出/终止\n4. 用 %% 注释说明复杂逻辑\n5. 对于决策菱形 {}，最多 3 个分支，每个分支用 -->|标签| 标注\n6. subgraph 按阶段分组：输入阶段、处理阶段、输出阶段';
+const SYSTEM_PROMPT = '你是一个资深的系统需求分析师 + Mermaid 图表专家。你的任务是根据用户描述的自然语言场景，提炼出严格、完整的系统需求，并生成最合适的 Mermaid 图表。\n\n铁路信号领域知识附录（仅当场景涉及铁路/地铁信号系统时激活）：\n\n术语表：\n- 联锁 (Interlocking)：信号机/道岔/进路之间的安全制约关系\n- 进路 (Route)：列车在站内运行的径路，由信号机防护\n- 道岔 (Turnout)：列车转向设备，定位/反位两种状态\n- 信号机 (Signal)：防护进路的信号设备，开放/关闭两种状态\n- 轨道电路 (Track Circuit)：检测区段占用/空闲的设备\n- 闭塞 (Block)：保证列车运行安全间隔的技术\n- 接近锁闭 (Approach Locking)：列车接近时锁闭进路防止取消\n- 敌对进路 (Conflicting Route)：与已建立进路冲突的其他进路\n- 故障导向安全 (Fail-Safe)：设备故障时输出安全侧\n- CBTC：基于通信的列车控制系统，ATS/ATO/ATP/ZC/VOBC 五层架构\n- 移动闭塞 (Moving Block)：无固定区段划分，基于前车位置动态计算MA\n- MA (Movement Authority)：移动授权，包含目标距离/允许速度/坡度\n- ZC (Zone Controller)：区域控制器，轨旁ATP，计算MA和防护包络\n- VOBC (Vehicle On-Board Controller)：车载控制器，定位+超速防护+自动驾驶\n- DCS (Data Communication System)：数据通信系统，车地无线冗余网络\n- TACS (Train Autonomous Control System)：列车自主控制系统，车车通信\n- T2T (Train-to-Train)：列车间直接通信，无需轨旁中继\n- OC (Object Controller)：目标控制器，TACS轨旁节点驱动道岔/屏蔽门\n- SIL (Safety Integrity Level)：安全完整性等级，SIL 4 最高\n\n联锁/列控系统需求分析特殊规则：\n1. 进路生命周期三阶段：建立（条件检查→道岔动作→锁闭→信号开放）、保持（接近锁闭+敌对锁闭）、释放（分段解锁/延时解锁）\n2. SIL 4 约束：安全苛求功能必须考虑冗余架构（2×2取2/三取二），THR ≤ 10⁻⁹/h\n3. 接口一致性：CBI/RBC/TCC/CTC 子系统间接口数据必须状态一致，通信故障考虑降级处理\n4. 降级模式覆盖：正常+降级（通信中断/轨道故障/道岔失表）+应急（引导进路/紧急关闭）三种场景\n5. 时序图选择优先级提升：涉及多系统条件验证和联锁逻辑检查时，sequenceDiagram 优先级排在 flowchart 之前\n\nCBTC/TACS 系统需求分析特殊规则：\n1. CBTC 子系统交互识别：ATS/ATO/ATP/ZC/VOBC 交互边界，交互密集场景（MA更新/位置报告/门联锁）自动触发 sequenceDiagram\n2. 移动闭塞关键要素：MA计算依赖前车位置+线路数据+安全包络，所有MA相关FR必须包含"安全防护包络"和"最不利位置偏移"\n3. 定位可信度管理：FR必须覆盖定位误差来源（滑行/空转/应答器漏读/轮径磨损）和安全冗余处理\n4. TACS 分布式逻辑：资源管理FR必须包含冲突检测和互斥访问的TSM仲裁机制\n5. 降级模式全覆盖：CBTC需覆盖3级以上降级路径——CAM→ATPM→RM→限制人工，列出每种模式的安全防护手段\n6. 折返场景时序优先：sequenceDiagram优先级高于flowchart\n7. 门安全联锁不可分割：列车门+屏蔽门联动是单原子FR，不可分解为开门/关门/发车等多个FR\n8. SIL约束追溯：ZC/VOBC/OC/T2T标注SIL 4，DCS安全应用层标注SIL 4\n\n输出格式：\n\n{\n  "requirements": {\n    "title": "系统名称",\n    "diagramType": "flowchart",\n    "layers": {\n      "business": { "goal": "业务目标", "value": "业务价值" },\n      "user": { "scenario": "用户场景", "painPoints": ["痛点"] },\n      "system": { "summary": "系统职责" }\n    },\n    "mainRequirement": {\n      "name": "总体需求名称",\n      "description": "对该需求的概括描述"\n    },\n    "systemBoundary": "系统边界",\n    "stakeholders": ["干系人"],\n    "functionalRequirements": [\n      { "id": "FR-1", "name": "功能名", "description": "描述（必须可测试）", "priority": "high|medium|low" }\n    ],\n    "dataFlows": [\n      { "from": "来源", "to": "目标", "data": "数据", "type": "input|output|storage" }\n    ],\n    "nonFunctionalRequirements": ["硬性约束 / 假设"]\n  },\n  "mermaidCode": "..."\n}\n\n需求分析规则：\\n1. JSON 必须严格合法\\n2. layers 必须包含 business/user/system 三层\\n3. 分析过程：先识别出 1 条核心/总体需求（mainRequirement），然后将其拆解为若干子功能需求（functionalRequirements），每个子 FR 必须与主需求有明确的派生关系\\n4. 区分"需要什么"（系统能力）和"怎么做"（UI/实现细节）。每个功能需求代表一个完整的业务能力，而非具体的操作步骤\\n5. 每条功能需求必须可测试\\n6. mainRequirement 恰 1 条，functionalRequirements 2-6 条。粒度控制在系统分析层面——如 FR-1 "用户登录认证"✅ 而非"显示登录页/输入用户名/点击登录按钮"❌\\n7. 所有描述使用中文\n\n图表类型选择规则（根据场景内容自动选择最合适的类型）：\n\n1. flowchart — 业务流程、工作流、决策树、用户操作路径、有明确步骤顺序的场景\n   语法：flowchart TD（自上而下），用 subgraph 分组，{} 菱形表示决策点\n   示例：\\nflowchart TD\\n  A[登录] --> B{验证}\\n  B -->|成功| C[首页]\\n  B -->|失败| D[错误提示]\n\n2. sequenceDiagram — API 交互、系统间通信、登录流程、多方协作、有时间顺序的消息传递、系统侧多条件验证与联锁逻辑\\n   语法：sequenceDiagram，actor 表示用户，participant 表示系统，->> 实线请求，-->> 虚线返回\\n   示例：\\\\nsequenceDiagram\\\\n  actor 用户\\\\n  participant 前端\\\\n  participant 后端\\\\n  用户->>前端: 提交表单\\\\n  前端->>后端: POST /api\\\\n  后端-->>前端: 返回结果\\\\n  前端-->>用户: 显示成功\n\n3. classDiagram — 系统架构、数据模型、类关系、面向对象设计、模块依赖\n   语法：classDiagram，<|-- 继承，*-- 组合，o-- 聚合，--> 关联\n   示例：\\nclassDiagram\\n  class 用户 {\\n    +id\\n    +登录()\\n  }\\n  class 订单 {\\n    +金额\\n    +支付()\\n  }\\n  用户 --> 订单\n\n4. stateDiagram-v2 — 状态机、生命周期、状态流转、工作流状态、审批流程\n   语法：stateDiagram-v2，[*] 开始/结束，--> 状态转换\\n  示例：\\nstateDiagram-v2\\n  [*] --> 待审核\\n  待审核 --> 通过\\n  待审核 --> 驳回\\n  通过 --> [*]\\n  驳回 --> 待审核\n\n5. erDiagram — 数据库设计、实体关系、数据表结构、字段定义\n   语法：erDiagram，||--o{ 一对多，||--|| 一对一，}o--|| 多对一\\n  示例：\\nerDiagram\\n  用户 ||--o{ 订单 : 下单\\n  订单 ||--|{ 订单项 : 包含\\n  商品 ||--o{ 订单项 : 被购买\n\n6. requirementDiagram — 安全苛求系统需求追溯、FR/NFR/系统元素关系展示\n   语法：requirementDiagram，requirement 定义需求，element 定义系统元素，satisfies/derives/verifies/refines/traces 表示关系\n   适用：铁路信号/航空航天等安全领域，需求数量多需追溯的场景，或用户明确要求需求图\n   风险说明：小模型（<3B）可能输出格式不稳定，此类型建议配合 API 大模型使用\n\n选择优先级：\n- 涉及多方交互、API 调用、消息传递 → sequenceDiagram\n- 涉及状态转换、审批流程、生命周期 → stateDiagram-v2\n- 涉及数据库、数据实体、字段定义 → erDiagram\n- 涉及类、模块、接口、继承关系 → classDiagram\n- 安全领域需求追溯、FR↔NFR↔系统元素关系展示 → requirementDiagram\n- 以上都不符合，或纯步骤流程 → flowchart\n\nMermaid 生成规则（严格遵循）：\n1. 所有标签和描述使用中文\n2. 节点命名使用固定格式 [动词+名词]（如 提交订单、确认支付、生成报告），每次分析对相同概念使用相同命名\n3. 流程图结构固定顺序：输入步骤 → 核心处理 → 分支决策 → 输出/终止\n4. 用 %% 注释说明复杂逻辑\n5. 对于决策菱形 {}，最多 3 个分支，每个分支用 -->|标签| 标注\n6. subgraph 按阶段分组：输入阶段、处理阶段、输出阶段';
 
 const app = createApp({
   setup() {
@@ -436,6 +473,10 @@ const app = createApp({
     const editableCode = ref('');
     const showEditor = ref(true);
     const editorDirty = ref(false);
+    const collapseInput = ref(false);
+    const collapseFR = ref(true);
+    const collapseDF = ref(true);
+    const collapseNFR = ref(true);
     const mirrorSource = ref(localStorage.getItem('mirror-source') || 'auto');
     let editorTimer = null;
     let engine = null;
@@ -498,6 +539,10 @@ const app = createApp({
       apiConfig.value={...localApiConfig.value};
       saveApiConfig();
       localStorage.setItem('llm-backend', backend.value);
+      if (backend.value === 'api') {
+        showWelcome.value = false;
+        webgpuWarn.value = false;
+      }
       showSettings.value=false;
     }
     function openSettings() {
@@ -510,7 +555,7 @@ const app = createApp({
     const selectedDiagramType = ref('flowchart');
     let _originalMermaidCode = '';
     const diagramOptions = DIAGRAM_TYPES;
-    function escDia(s) { return (s||'').replace(/[{}[\]()]/g,'').trim(); }
+    function escDia(s) { return (s||'').replace(/[{}[\]()"\\]/g,'').trim(); }
     function sid(s) { return (s||'').replace(/[^a-zA-Z0-9\u4e00-\u9fff]/g,'_').replace(/_{2,}/g,'_').replace(/^_|_$/g,'')||'n'; }
     function genFlowchart(r) {
       const frs=r.functionalRequirements; if(!frs||!frs.length) return 'flowchart TD\n  A[系统]-->B[待分析]';
@@ -576,9 +621,13 @@ const app = createApp({
     }
     function diagramLabel(t) { return DIAGRAM_TYPES.find(d=>d.value===t)?.label||t; }
 
-    const APP_VERSION = '2.2.0';
+    const APP_VERSION = '2.6.0';
     const RELEASE_NOTES = [
-      { ver:'v2.2.0', date:'2026-05-17', items:['总体需求（mainRequirement）展示：先提炼 1 条核心需求再拆解为子 FR','Mermaid 稳定性提升：固定节点命名、流程图固定顺序、seed=42','实时分析计时器：分析过程中显示累计用时','分析中状态：WebLLM 也显示"分析中..."','历史记录增加分析用时显示','图表类型切换：分析后可通过下拉菜单切换流程图/时序图/类图/状态图/ER 图'] },
+      { ver:'v2.6.0', date:'2026-06-04', items:['输入区自动压缩：分析完成后场景描述区自动折叠为一条窄栏，释放更多垂直空间给需求报告和流程图','压缩态显示场景文本预览 +「展开」按钮，点击恢复完整编辑器，可重新编辑后再次分析'] },
+      { ver:'v2.5.0', date:'2026-05-28', items:['设置面板支持 WebLLM 模型管理：模型选择、下载源切换、下载/加载/卸载/缓存清理','国内镜像使用 hf-mirror.com 下载模型权重（WASM 库直连 GitHub raw）','loadModel 根据 mirrorSource 切换模型权重镜像源','设置面板全新 UI 设计：状态徽标、进度条、缓存信息、操作按钮'] },
+      { ver:'v2.4.0', date:'2026-05-27', items:['[FIX] WebGPU 不可用时用户被阻挡（警告栏+欢迎页均被隐藏）— 新增「跳过 WebLLM，使用第三方 API」按钮直达 API 后端','[FIX] WebLLM CDN 加载失败导致白屏（`document.body.innerHTML` 硬覆盖）— 改为优雅降级，API 后端不受影响','欢迎页底部新增「跳过 WebLLM，使用第三方 API →」入口','设置页保存 API 后端时自动绕过欢迎页'] },
+      { ver:'v2.3.5', date:'2026-05-17', items:['布局重构：FR/数据流/NFR 区域可折叠，默认折叠以放大图区视野','模型选择卡 + 后端徽标移除，场景描述区上方更简洁','Vue 版 RequirementsReport.vue 同步可折叠功能','上下排列布局，图区 flex:1 自适应高度','场景描述字体与结果标题一致，分析按钮移入标题行','流程图支持复制为图片/另存为图片'] },
+      { ver:'v2.3.0', date:'2026-05-17', items:['铁路信号领域增强：CBTC/TACS 领域知识注入（ATC/ATO/ATP/ZC/VOBC/DCS 架构 + TACS T2T/OC/TSM 分布式逻辑）','System Prompt 铁路信号附录：术语表 + 联锁列控分析规则 5 条 + CBTC/TACS 分析规则 8 条','测试数据集扩展至 31 个场景','评分指标扩展：虚拟编组识别 / GoA 等级匹配 / 多制式统一调度 / 安全包络处理'] },
       { ver:'v2.0.0', date:'2026-05-16', items:['多图表类型支持：根据场景自动选择 flowchart / sequenceDiagram / classDiagram / stateDiagram-v2 / erDiagram','图表类型徽标展示','System Prompt 5 种图表选择规则','版本信息与更新说明展示'] },
       { ver:'v1.1.0', date:'2026-05-16', items:['国内镜像下载源（hf-mirror.com）','打包与跨电脑使用文档'] },
       { ver:'v1.0.0', date:'2026-05-16', items:['Mermaid 代码编辑器 + 实时预览','三层需求展示（BR→UR→SR）','导出 Markdown','复制 Mermaid 代码'] },
@@ -616,6 +665,11 @@ const app = createApp({
 
     async function loadModel() {
       if (!checkWebGPU()) return;
+      if (!CreateMLCEngine) {
+        llmStatus.value = 'error';
+        llmError.value = 'WebLLM 引擎加载失败（CDN 不可达）。请切换为「第三方 API」后端，或刷新页面重试。';
+        return;
+      }
 
       llmStatus.value = 'downloading';
       llmError.value = '';
@@ -623,7 +677,8 @@ const app = createApp({
       llmProgressText.value = '初始化引擎...';
       try {
         const engineConfig = {};
-        if (mirrorSource.value === 'china') {
+        const src = mirrorSource.value;
+        if (src === 'china') {
           const ml = MODEL_OPTIONS.map(m => ({
             model: m.mirror,
             model_id: m.id,
@@ -631,10 +686,8 @@ const app = createApp({
             overrides: { context_window_size: 4096 },
           }));
           engineConfig.appConfig = { model_list: ml };
-          localStorage.setItem('mirror-source', 'china');
-        } else {
-          localStorage.setItem('mirror-source', 'auto');
         }
+        localStorage.setItem('mirror-source', src);
         engine = await CreateMLCEngine(currentModel.value, {
           initProgressCallback: (p) => {
             if (p.text && p.text.includes('Loading')) llmStatus.value = 'loading';
@@ -667,6 +720,20 @@ const app = createApp({
       llmProgressText.value = '';
       result.value = null;
       analysisStatus.value = 'idle';
+    }
+
+    function skipToApi() {
+      backend.value = 'api';
+      showWelcome.value = false;
+      webgpuWarn.value = false;
+      llmError.value = '';
+      localStorage.setItem('llm-backend', 'api');
+      skipToApiSettings();
+    }
+
+    function skipToApiSettings() {
+      localApiConfig.value = { ...apiConfig.value };
+      showSettings.value = true;
     }
 
     const API_TIMEOUT = 600000;
@@ -745,6 +812,7 @@ const app = createApp({
 
         // Show first result immediately
         result.value = parsed;
+        collapseInput.value = true;
         analysisStatus.value = 'done';
         selectedDiagramType.value = parsed.requirements.diagramType || 'flowchart';
         _originalMermaidCode = parsed.mermaidCode;
@@ -878,7 +946,7 @@ const app = createApp({
     function loadHistory() { try { const d=localStorage.getItem(STORAGE_KEY); return d?JSON.parse(d):[]; } catch { return []; } }
 
     function restoreEntry(entry) {
-      sceneText.value = entry.sceneText; result.value = entry.result; analysisStatus.value = 'done';
+      sceneText.value = entry.sceneText; result.value = entry.result; collapseInput.value = true; analysisStatus.value = 'done';
       analysisTime.value = entry.analysisTime || '';
       selectedDiagramType.value = entry.result.requirements.diagramType || 'flowchart';
       editableCode.value = entry.result.mermaidCode; showEditor.value = true; editorDirty.value = false;
@@ -935,11 +1003,6 @@ const app = createApp({
       return (b/Math.pow(1024,i)).toFixed(i?1:0)+' '+u[i];
     }
 
-    function diagramLabel(t) {
-      const labels = { flowchart:'流程图', sequenceDiagram:'时序图', classDiagram:'类图', 'stateDiagram-v2':'状态图', erDiagram:'ER图' };
-      return labels[t] || t;
-    }
-
     // Watch editableCode for live re-render (debounced 600ms)
     watch(editableCode, (val) => {
       if (!val || val === result.value?.mermaidCode) { editorDirty.value = false; return; }
@@ -962,6 +1025,61 @@ const app = createApp({
         document.execCommand('copy');
         document.body.removeChild(ta);
       }
+    }
+
+    function openDiagramInNewTab() {
+      const code = editableCode.value || result.value?.mermaidCode;
+      if (!code) return;
+      const cdnBase = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+      const html = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>需求分析图</title><script src="'+cdnBase+'"><\/script><style>body{margin:0;min-height:100vh;display:flex;justify-content:center;padding:40px 20px;box-sizing:border-box;background:#fff;font-family:system-ui,-apple-system,sans-serif}.mermaid{max-width:1200px;width:100%}.mermaid svg{max-width:100%;height:auto!important}@media(prefers-color-scheme:dark){body{background:#1e1e1e}}</style></head><body><div class="mermaid">'+code.replace(/<\/script>/gi,'<\\/script>')+'</div><script>mermaid.initialize({startOnLoad:true,theme:"default",securityLevel:"loos"})<\/script></body></html>';
+      const win = window.open('', '_blank');
+      if (win) { win.document.write(html); win.document.close(); }
+    }
+
+    async function svgToBlob() {
+      const svgEl = document.querySelector('.diagram-box svg');
+      if (!svgEl) return null;
+      const svgClone = svgEl.cloneNode(true);
+      svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      const svgStr = new XMLSerializer().serializeToString(svgClone);
+      const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      await new Promise(function(res, rej) { img.onload = res; img.onerror = rej; img.src = url; });
+      URL.revokeObjectURL(url);
+      const rect = svgEl.getBoundingClientRect();
+      const cvs = document.createElement('canvas');
+      const dpr = window.devicePixelRatio || 1;
+      cvs.width = (rect.width || 800) * dpr;
+      cvs.height = (rect.height || 600) * dpr;
+      var ctx = cvs.getContext('2d');
+      if (!ctx) return null;
+      ctx.scale(dpr, dpr);
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, cvs.width, cvs.height);
+      ctx.drawImage(img, 0, 0, rect.width || 800, rect.height || 600);
+      return new Promise(function(r) { cvs.toBlob(function(b) { r(b); }, 'image/png'); });
+    }
+
+    async function copyDiagramAsImage() {
+      const blob = await svgToBlob();
+      if (!blob) return;
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      } catch {
+        alert('复制图片失败，请尝试「保存图片」');
+      }
+    }
+
+    async function saveDiagramAsImage() {
+      const blob = await svgToBlob();
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const title = result.value?.requirements?.title?.replace(/[\\/:*?"<>|]/g, '_') || 'diagram';
+      a.href = url; a.download = title + '.png';
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
     }
 
     function exportMarkdown() {
@@ -1016,12 +1134,13 @@ const app = createApp({
       loadModel, unloadModel, analyze, cancelAnalysis,
       scanCache, clearModelCache,
       restoreEntry, deleteEntry, clearHistory, fmtDate,
-      editableCode, showEditor, editorDirty, copyCode, exportMarkdown, mirrorSource, diagramLabel,
+      editableCode, showEditor, editorDirty, copyCode, openDiagramInNewTab, copyDiagramAsImage, saveDiagramAsImage, exportMarkdown, mirrorSource, diagramLabel,
+      collapseFR, collapseDF, collapseNFR,
       onCopyFr, onCopyMainReq,
       diagramOptions, selectedDiagramType, onDiagramTypeChange,
       showReleaseNotes, APP_VERSION, RELEASE_NOTES,
       showSettings, backend, apiConfig, localApiConfig, API_PROVIDERS,
-      openSettings, saveSettings, onProviderChange, onModelSelect,
+      openSettings, saveSettings, skipToApi, onProviderChange, onModelSelect,
       testApiConnection, testing, testStatus, modelOptionsList,
     };
   }

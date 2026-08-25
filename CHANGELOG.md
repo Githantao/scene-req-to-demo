@@ -1,5 +1,45 @@
 # Changelog
 
+## v2.6.0 (2026-06-04)
+
+### 改进
+- **输入区自动压缩** — 分析完成后场景描述 `.card` 自动折叠为一条窄栏，释放垂直空间给需求报告和流程图区域
+- **一键展开** — 压缩态显示场景文本预览（前 80 字符）+「展开」按钮，点击恢复完整编辑器，可重新编辑后再次分析
+- **历史恢复同步压缩** — 从历史记录恢复结果时同样自动压缩输入区
+
+### 关联文件
+- `analyzer.html` — 新增 collapseInput ref、模板折叠/展开态切换、CSS 压缩态样式（`.card-collapsed`/`.input-compact`），analyze()/restoreEntry() 自动折叠逻辑
+
+## v2.5.0 (2026-05-28)
+
+### 改进
+- **设置面板支持 WebLLM 模型管理** — 设置中选择 WebLLM 后端后，可直接选择模型、切换下载源（自动/国内镜像）、下载/加载/卸载模型、查看进度和缓存
+- **国内镜像下载优化** — 模型权重（1-2.5GB）走 `hf-mirror.com` 镜像加速；WASM 库（~5MB）直连 GitHub raw 无需代理
+- **loadModel 镜像源适配** — 根据 `mirrorSource` 自动切换模型权重源（auto→huggingface.co / china→hf-mirror.com）
+- **设置面板 UI 改进** — 状态徽标（圆点颜色指示 idle/ready/error）、迷你进度条、缓存大小显示、操作按钮
+
+### 修复
+- **[FIX] raw.gitmirror.com DNS 不可用** — 移除不可达的镜像域名，WASM 库改为始终直连 `raw.githubusercontent.com`
+- **[FIX] loadModel auto 模式不传 appConfig** — 避免自定义 model_list 覆盖 WebLLM 内置默认配置导致下载失败
+
+### 关联文件
+- `analyzer.html` — 设置面板新增 WebLLM 管理区（模型选择、下载源、下载按钮、进度条、缓存管理），MODEL_LIBS 恢复单一直链，loadModel 只对 china 模式传 appConfig，CSS 新增 as-radio-sm/as-pb/as-spinner-xs 等样式
+
+## v2.4.0 (2026-05-27)
+
+### 修复
+- **WebGPU 不可用时用户被阻挡** — 当浏览器不支持 WebGPU（如 file:// 协议、Safari 等），WebGPU 警告栏和欢迎页均被隐藏导致用户处于空状态
+- **WebLLM CDN 加载失败导致白屏** — 顶层 import catch 块用 `document.body.innerHTML` 覆盖页面，用户丢失 API 后端入口
+
+### 改进
+- **一键跳过 WebLLM** — WebGPU 警告栏新增「跳过 WebLLM，使用第三方 API」按钮，点击后自动切换至 API 后端并弹出设置面板
+- **欢迎页直通 API** — 欢迎页底部新增相同跳转入口，CDN 加载失败时同样可跳过
+- **saveSettings 自动绕过欢迎页** — 在设置中保存 API 后端配置时自动关闭欢迎页/警告
+- **CDN 加载失败优雅处理** — 不再硬覆盖页面，保持 `CreateMLCEngine` 为 undefined，后续 `loadModel()` 友好提示切换后端
+
+### 关联文件
+- `analyzer.html` — WebGPU 警告栏/欢迎页新增 skipToApi 按钮，新增 skipToApi/skipToApiSettings 函数，saveSettings 增加欢迎页绕过逻辑，loadModel 增加 CDN 缺失检测，移除 CDN import catch 的 `document.body.innerHTML`
+
 ## v2.0.0 (2026-05-16)
 
 ### 新增

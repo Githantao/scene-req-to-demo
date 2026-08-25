@@ -101,12 +101,65 @@ async function copyCode() {
     document.body.removeChild(ta)
   }
 }
+
+function openDiagramInNewTab() {
+  const code = editableCode.value || props.code
+  if (!code) return
+  const cdnBase = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js'
+  const html = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>需求分析图</title><script src="'+cdnBase+'"><\/script><style>body{margin:0;min-height:100vh;display:flex;justify-content:center;padding:40px 20px;box-sizing:border-box;background:#fff;font-family:system-ui,-apple-system,sans-serif}.mermaid{max-width:1200px;width:100%}.mermaid svg{max-width:100%;height:auto!important}@media(prefers-color-scheme:dark){body{background:#1e1e1e}}</style></head><body><div class="mermaid">'+code.replace(/<\/script>/gi,'<\\/script>')+'</div><script>mermaid.initialize({startOnLoad:true,theme:"default",securityLevel:"loos"})<\/script></body></html>'
+  const win = window.open('', '_blank')
+  if (win) { win.document.write(html); win.document.close() }
+}
+
+async function svgToBlob(): Promise<Blob | null> {
+  const svgEl = document.querySelector('.svg-container svg')
+  if (!svgEl) return null
+  const svgClone = svgEl.cloneNode(true) as SVGElement
+  svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+  const svgStr = new XMLSerializer().serializeToString(svgClone)
+  const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' })
+  const url = URL.createObjectURL(svgBlob)
+  const img = new Image()
+  await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = rej; img.src = url })
+  URL.revokeObjectURL(url)
+  const rect = svgEl.getBoundingClientRect()
+  const cvs = document.createElement('canvas')
+  const dpr = window.devicePixelRatio || 1
+  cvs.width = (rect.width || 800) * dpr
+  cvs.height = (rect.height || 600) * dpr
+  const ctx = cvs.getContext('2d')!
+  ctx.scale(dpr, dpr)
+  ctx.fillStyle = '#fff'
+  ctx.fillRect(0, 0, cvs.width, cvs.height)
+  ctx.drawImage(img, 0, 0, rect.width || 800, rect.height || 600)
+  return new Promise(r => cvs.toBlob(b => r(b), 'image/png'))
+}
+
+async function copyDiagramAsImage() {
+  const blob = await svgToBlob()
+  if (!blob) return
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+  } catch {
+    alert('复制图片失败，请尝试「保存图片」')
+  }
+}
+
+async function saveDiagramAsImage() {
+  const blob = await svgToBlob()
+  if (!blob) return
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = 'diagram.png'
+  document.body.appendChild(a); a.click()
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url) }, 100)
+}
 </script>
 
 <template>
   <div class="diagram">
     <div class="diagram-header">
-      <h3 class="section-heading">系统流程图</h3>
+      <h3 class="section-heading">需求场景流程图</h3>
       <select v-if="requirements" class="dia-select" :value="selectedType" @change="onTypeChange(($event.target as HTMLSelectElement).value)">
         <option v-for="opt in diagramOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
       </select>
@@ -123,7 +176,10 @@ async function copyCode() {
         <span class="editor-label">编辑 Mermaid 代码</span>
         <div class="editor-actions">
           <span v-if="editorDirty" class="editor-hint">已修改·自动渲染</span>
-          <button class="btn btn-xs btn-outline" @click="copyCode">复制</button>
+          <button class="btn btn-xs btn-outline" @click="openDiagramInNewTab">新标签页</button>
+          <button class="btn btn-xs btn-outline" @click="copyDiagramAsImage">复制图片</button>
+          <button class="btn btn-xs btn-outline" @click="saveDiagramAsImage">保存图片</button>
+          <button class="btn btn-xs btn-outline" @click="copyCode">复制代码</button>
           <button class="btn btn-xs btn-ghost" @click="showEditor=!showEditor">{{ showEditor?'收起':'展开' }}</button>
         </div>
       </div>
@@ -159,7 +215,7 @@ async function copyCode() {
   text-transform: uppercase;
   letter-spacing: .5px;
 }
-.svg-container { overflow: auto; background: #fff; border-radius: 8px; border: 1px solid var(--border); padding: 16px; min-height: 200px; }
+.svg-container { overflow: auto; background: #fff; border-radius: 8px; border: 1px solid var(--border); padding: 16px; min-height: 300px; display: flex; align-items: flex-start; justify-content: center; }
 .svg-container :deep(svg) { max-width: 100%; height: auto; }
 .error-box { border: 1px solid #f5c6cb; background: #fce8e6; border-radius: 8px; padding: 12px; }
 .error-title { font-size: 14px; font-weight: 600; color: #c5221f; margin: 0 0 8px; }

@@ -16,28 +16,28 @@ const emit = defineEmits<{
 
 <template>
   <div class="scene-input">
-    <label class="label">场景描述</label>
+    <label class="label">
+      场景描述
+      <div class="label-actions">
+        <span v-if="!modelReady && modelStatusText" class="hint">请先加载模型</span>
+        <button
+          v-if="analysisStatus !== 'analyzing'"
+          class="btn btn-primary"
+          :disabled="!modelReady"
+          @click="emit('analyze')"
+        >开始分析</button>
+        <button
+          v-else
+          class="btn btn-danger"
+          @click="emit('cancel')"
+        ><span class="spinner" />停止分析</button>
+      </div>
+    </label>
     <textarea
       class="textarea"
       :placeholder="`描述你的系统场景，例如：\n「我需要在校园内实现一个共享单车系统，学生可以通过手机扫码解锁单车，骑行结束后上锁结算。管理员可以在后台管理单车和查看使用统计。」`"
       rows="5"
     />
-    <div class="input-footer">
-      <button
-        v-if="analysisStatus !== 'analyzing'"
-        class="btn btn-primary"
-        :disabled="!modelReady"
-        @click="emit('analyze')"
-      >分析</button>
-      <button
-        v-else
-        class="btn btn-danger"
-        @click="emit('cancel')"
-      ><span class="spinner" />停止</button>
-      <span v-if="!modelReady && modelStatusText" class="hint">
-        请先加载模型
-      </span>
-    </div>
   </div>
 </template>
 
@@ -47,13 +47,19 @@ const emit = defineEmits<{
 }
 
 .label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: .5px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.label-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .textarea {
@@ -77,16 +83,13 @@ const emit = defineEmits<{
   box-shadow: 0 0 0 3px var(--primary-alpha);
 }
 
-.input-footer {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 8px;
-}
-
 .hint {
   font-size: 13px;
   color: var(--text-secondary);
+}
+.label-actions :deep(.btn) {
+  font-size: 16px;
+  padding: 6px 16px;
 }
 
 .spinner {

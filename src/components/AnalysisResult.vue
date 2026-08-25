@@ -17,11 +17,11 @@ const emit = defineEmits<{
 
 <template>
   <div class="analysis-result">
-    <div class="result-panel result-left">
+    <div class="result-panel">
       <RequirementsReport :requirements="result.requirements" @export-md="emit('exportMd')" />
     </div>
     <div class="result-divider" />
-    <div class="result-panel result-right">
+    <div class="result-panel result-diagram">
       <MermaidDiagram
         :code="result.mermaidCode"
         :requirements="result.requirements"
@@ -36,6 +36,7 @@ const emit = defineEmits<{
 <style scoped>
 .analysis-result {
   display: flex;
+  flex-direction: column;
   gap: 0;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -44,24 +45,18 @@ const emit = defineEmits<{
 }
 
 .result-panel {
-  flex: 1;
   padding: 20px;
-  overflow-y: auto;
-  max-height: 70vh;
+}
+.result-panel:first-child {
+  flex: none;
+}
+.result-panel.result-diagram {
+  flex: 1;
+  min-height: 400px;
 }
 
 .result-divider {
-  width: 1px;
+  height: 1px;
   background: var(--border);
-}
-
-@media (max-width: 768px) {
-  .analysis-result {
-    flex-direction: column;
-  }
-  .result-divider {
-    width: 100%;
-    height: 1px;
-  }
 }
 </style>

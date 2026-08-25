@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { Requirements } from '../types'
 
 const props = defineProps<{
@@ -8,6 +9,10 @@ const props = defineProps<{
 const emit = defineEmits<{
   exportMd: []
 }>()
+
+const collapseFR = ref(true)
+const collapseDF = ref(true)
+const collapseNFR = ref(true)
 
 function priorityClass(p: string) {
   if (p === 'high') return 'tag-red'
@@ -65,38 +70,50 @@ function priorityClass(p: string) {
     </section>
 
     <section class="section">
-      <h3 class="section-heading">功能需求</h3>
-      <div v-for="fr in requirements.functionalRequirements" :key="fr.id" class="req-card">
-        <div class="req-header">
-          <span class="req-id">{{ fr.id }}</span>
-          <span class="tag" :class="priorityClass(fr.priority)">{{ fr.priority === 'high' ? '高' : fr.priority === 'medium' ? '中' : '低' }}</span>
+      <h3 class="section-heading collapsible" @click="collapseFR = !collapseFR">
+        <span class="collapse-icon">{{ collapseFR ? '▶' : '▼' }}</span> 功能需求
+      </h3>
+      <template v-if="!collapseFR">
+        <div v-for="fr in requirements.functionalRequirements" :key="fr.id" class="req-card">
+          <div class="req-header">
+            <span class="req-id">{{ fr.id }}</span>
+            <span class="tag" :class="priorityClass(fr.priority)">{{ fr.priority === 'high' ? '高' : fr.priority === 'medium' ? '中' : '低' }}</span>
+          </div>
+          <h4 class="req-name">{{ fr.name }}</h4>
+          <p class="req-desc">{{ fr.description }}</p>
         </div>
-        <h4 class="req-name">{{ fr.name }}</h4>
-        <p class="req-desc">{{ fr.description }}</p>
-      </div>
-      <p v-if="requirements.functionalRequirements.length === 0" class="empty">无功能需求</p>
+        <p v-if="requirements.functionalRequirements.length === 0" class="empty">无功能需求</p>
+      </template>
     </section>
 
     <section class="section">
-      <h3 class="section-heading">数据流</h3>
-      <div v-for="(df, i) in requirements.dataFlows" :key="i" class="dataflow-item">
-        <span class="df-from">{{ df.from }}</span>
-        <span class="df-arrow">→</span>
-        <span class="df-to">{{ df.to }}</span>
-        <span class="df-data">({{ df.data }})</span>
-        <span class="tag" :class="df.type === 'input' ? 'tag-green' : df.type === 'output' ? 'tag-blue' : 'tag-gray'" style="margin-left:auto">
-          {{ df.type === 'input' ? '输入' : df.type === 'output' ? '输出' : '存储' }}
-        </span>
-      </div>
-      <p v-if="requirements.dataFlows.length === 0" class="empty">无数据流</p>
+      <h3 class="section-heading collapsible" @click="collapseDF = !collapseDF">
+        <span class="collapse-icon">{{ collapseDF ? '▶' : '▼' }}</span> 数据流
+      </h3>
+      <template v-if="!collapseDF">
+        <div v-for="(df, i) in requirements.dataFlows" :key="i" class="dataflow-item">
+          <span class="df-from">{{ df.from }}</span>
+          <span class="df-arrow">→</span>
+          <span class="df-to">{{ df.to }}</span>
+          <span class="df-data">({{ df.data }})</span>
+          <span class="tag" :class="df.type === 'input' ? 'tag-green' : df.type === 'output' ? 'tag-blue' : 'tag-gray'" style="margin-left:auto">
+            {{ df.type === 'input' ? '输入' : df.type === 'output' ? '输出' : '存储' }}
+          </span>
+        </div>
+        <p v-if="requirements.dataFlows.length === 0" class="empty">无数据流</p>
+      </template>
     </section>
 
     <section class="section">
-      <h3 class="section-heading">非功能性需求</h3>
-      <ul v-if="requirements.nonFunctionalRequirements.length" class="nfr-list">
-        <li v-for="(nfr, i) in requirements.nonFunctionalRequirements" :key="i">{{ nfr }}</li>
-      </ul>
-      <p v-else class="empty">无非功能性需求</p>
+      <h3 class="section-heading collapsible" @click="collapseNFR = !collapseNFR">
+        <span class="collapse-icon">{{ collapseNFR ? '▶' : '▼' }}</span> 非功能性需求
+      </h3>
+      <template v-if="!collapseNFR">
+        <ul v-if="requirements.nonFunctionalRequirements.length" class="nfr-list">
+          <li v-for="(nfr, i) in requirements.nonFunctionalRequirements" :key="i">{{ nfr }}</li>
+        </ul>
+        <p v-else class="empty">无非功能性需求</p>
+      </template>
     </section>
   </div>
 </template>
@@ -120,6 +137,22 @@ function priorityClass(p: string) {
   margin: 0 0 8px;
   text-transform: uppercase;
   letter-spacing: .5px;
+}
+.section-heading.collapsible {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.section-heading.collapsible:hover {
+  color: var(--text);
+}
+.collapse-icon {
+  font-size: 10px;
+  width: 12px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .section-text {

@@ -29,7 +29,7 @@ const showReleaseNotes = ref(false)
 <template>
   <header class="app-header">
     <div class="header-left">
-      <h1 class="app-title">场景需求分析器</h1>
+      <h1 class="app-title">场景需求分析辅助工具</h1>
       <span class="subtitle">自然语言 → 系统需求 + 流程图 <span class="ver-badge">v{{ APP_VERSION }}</span></span>
     </div>
     <div class="header-right">

@@ -100,6 +100,23 @@ npm run build      # 构建到 dist/
 - **首次引导** — 首次使用欢迎页 + 模型下载指引
 - **缓存复制指引** — 提供跨机器复制模型缓存的方法
 
+## Agent Skill — 场景需求生成器
+
+本项目已将核心能力封装为可复用的 Agent Skill：`Scene-Req-to-demo`
+
+**一句话**：自然语言场景描述 → 六段式需求文档 + 暗蓝工业风可交互 Demo + 结构化 JSON
+
+**安装**：
+
+```bash
+./scripts/install-skill.sh          # 安装到所有兼容的 agent 目录
+./scripts/install-skill.sh --force  # 覆盖已安装的版本
+```
+
+详见 [本地安装与使用说明](docs/skill-install.md)。
+
+**触发**：在任意支持 skills 的 agent 对话中，输入"场景描述"、"需求分析"、"帮我分析这个场景"等关键词即可自动触发。详见 `skills/Scene-Req-to-demo/SKILL.md`。
+
 ## 参考材料
 
 本项目参考了以下资料的设计理念和实践：

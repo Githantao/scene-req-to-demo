@@ -289,6 +289,35 @@ const MODEL_LIBS = {
 
 ---
 
+### Bug #8: WebGPU 不可用时无法绕过，用户被阻挡无法使用
+
+**症状：** 浏览器不支持 WebGPU（如 `file://` 协议、Safari 等）时，WebGPU 黄色警告栏显示指导信息，但用户无法继续使用——正常 UI 和欢迎页均被隐藏，没有切换到 API 后端的入口。
+
+**原因：** `webgpuWarn` 状态为 `true` 时，模板中 `<template v-if="!showWelcome && !webgpuWarn">` 和 `<div v-if="showWelcome && !webgpuWarn">` 两条路径均被阻断，用户处于空状态。
+
+**修复：**
+1. WebGPU 警告栏新增"方案三"按钮「跳过 WebLLM，使用第三方 API」
+2. 欢迎页底部新增相同跳转按钮
+3. `skipToApi()` 函数一键切换：`backend='api'` + 关闭欢迎页/警告 + 弹出 API 设置面板
+4. `saveSettings()` 在保存 API 后端时自动绕过欢迎页
+5. `loadModel()` 增加 `CreateMLCEngine` 为空（CDN 加载失败）的提前检测提示
+
+**关联文件：** `analyzer.html`
+
+---
+
+### Bug #9: WebLLM CDN 加载失败导致白屏（无有效降级处理）
+
+**症状：** CDN 不可达时 `document.body.innerHTML = '...'` 覆盖页面，用户完全丢失 API 后端的可能性。
+
+**原因：** 顶层 `import()` 的 `catch` 块用硬错误页面替换了整个 DOM。
+
+**修复：** 移除 `document.body.innerHTML` 覆盖，仅记录错误；`CreateMLCEngine` 保持 `undefined`，后续 `loadModel()` 检测并提示用户切换后端；使 API 后端流程不受影响。
+
+**关联文件：** `analyzer.html`
+
+---
+
 ### v2.2.0 — 主需求 + Mermaid 稳定性 + 实时计时 + 历史用时
 
 **新增：**
@@ -333,10 +362,10 @@ const MODEL_LIBS = {
 
 | 限制 | 说明 | 计划 |
 |------|------|------|
-| WebGPU 依赖 | 需要 Chrome/Edge 113+ | 考虑 Ollama 后端支持 (P2) |
-| CDN 网络依赖 | `analyzer.html` 首次需从 jsdelivr 加载 6MB | 不可消除（WebLLM 必须） |
+| WebGPU 依赖 | 需要 Chrome/Edge 113+ | ⚠️ 已可通过第三方 API 绕过 |
+| CDN 网络依赖 | `analyzer.html` 首次需从 jsdelivr 加载 6MB | ⚠️ WebLLM CDN 失败可切 API 绕过 |
 | 模型下载大 | 首次需下载 1-2.5GB | 提供缓存复制指引 |
-| Safari 不支持 | WebGPU 不可用 | 跟进 Safari WebGPU 支持 |
+| Safari 不支持 | WebGPU 不可用 | ✅ 可切第三方 API 使用 |
 | 单轮对话 | 无法追问细化需求 | 多轮对话 (P2) |
 
 ---
@@ -396,5 +425,10 @@ b9d2d06 feat: 场景需求分析器 v0.1.0
 
 ### 修改后必须验证
 
-1. `npm run build` — TypeScript 检查 + Vite 构建通过
+1. `npm run build` — TypeScript 检查 + Vite 构建通过（仅修改 Vue 工程时需要）
 2. `analyzer.html` — 浏览器打开，欢迎页正常，模型加载/分析流程可用
+3. **每次修改必须升版本号：最后一位（patch）递增**，同步更新以下 4 处：
+   - `VERSION` 文件
+   - `package.json` 的 `version` 字段
+   - `analyzer.html` 的 `APP_VERSION` 常量
+   - `analyzer.html` 的 header 中 `ver-badge` 标签

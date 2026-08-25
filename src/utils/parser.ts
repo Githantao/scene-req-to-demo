@@ -61,5 +61,6 @@ export function generateFallbackMermaid(title: string, type = 'flowchart'): stri
   if (type === 'sequenceDiagram') return `sequenceDiagram\n  actor 用户\n  participant 系统\n  用户->>系统: 请求\n  系统-->>用户: 响应`
   if (type === 'stateDiagram-v2') return `stateDiagram-v2\n  [*] --> 初始\n  初始 --> [*]`
   if (type === 'classDiagram') return `classDiagram\n  class 系统 {\n    +操作()\n  }`
+  if (type === 'requirementDiagram') return `requirementDiagram\n    functionalRequirement mainReq {\n        id: FR-0\n        text: "${title}"\n        risk: High\n        verifymethod: Test\n    }`
   return `flowchart TD\n  A[${title}] --> B[待分析]`
 }

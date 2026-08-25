@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import AppHeader from './components/AppHeader.vue'
-import ModelSelector from './components/ModelSelector.vue'
+
 import SceneInput from './components/SceneInput.vue'
 import LoadingOverlay from './components/LoadingOverlay.vue'
 import AnalysisResult from './components/AnalysisResult.vue'
@@ -66,17 +66,6 @@ const modelStatusText = computed(() => {
   return ''
 })
 
-async function handleLoadModel() {
-  try {
-    await llm.loadModel(llm.currentModel.value)
-  } catch {}
-}
-
-async function handleUnloadModel() {
-  llm.unloadModel()
-  analysis.reset()
-}
-
 async function handleAnalyze() {
   const input = document.querySelector('.textarea') as HTMLTextAreaElement
   if (!input) return
@@ -139,7 +128,7 @@ function exportMarkdown() {
     md += '\n'
   }
   if (r.nonFunctionalRequirements?.length) md += '## 非功能性需求\n\n' + r.nonFunctionalRequirements.map(n=>'- '+n).join('\n') + '\n\n'
-  md += '## 系统流程图\n\n```mermaid\n' + (analysis.result.value?.mermaidCode||'') + '\n```\n'
+  md += '## 需求场景流程图\n\n```mermaid\n' + (analysis.result.value?.mermaidCode||'') + '\n```\n'
   const blob = new Blob([md], {type:'text/markdown;charset=utf-8'})
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -163,23 +152,6 @@ function exportMarkdown() {
 
     <main class="main">
       <div class="container">
-        <div class="backend-badge" :class="backend">
-          {{ backend === 'webllm' ? '🧠 WebLLM 本地' : '☁️ ' + apiLLM.config.value.model }}
-          <button class="backend-edit" @click="showSettings = true">⚙</button>
-        </div>
-
-        <template v-if="backend === 'webllm'">
-          <ModelSelector
-            :model-id="llm.currentModel.value"
-            :loading-status="llm.status.value"
-            :mirror-source="llm.mirrorSource.value"
-            @select-model="llm.currentModel.value = $event"
-            @load-model="handleLoadModel"
-            @unload-model="handleUnloadModel"
-            @update:mirror-source="llm.mirrorSource.value = $event"
-          />
-        </template>
-
         <SceneInput
           :model-status-text="modelStatusText"
           :model-progress="llm.progress.value.progress"
@@ -257,20 +229,6 @@ body {
 
 .container { max-width: 1200px; margin: 0 auto; }
 
-.backend-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 12px;
-}
-.backend-badge.webllm { background: #e8f0fe; color: #1967d2; }
-.backend-badge.api { background: #e6f4ea; color: #137333; }
-.backend-edit { background: none; border: none; cursor: pointer; font-size: 14px; padding: 0; line-height: 1; opacity: .6; }
-.backend-edit:hover { opacity: 1; }
 
 .btn {
   display: inline-flex;
