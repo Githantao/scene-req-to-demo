@@ -5,7 +5,7 @@ license: MIT
 compatibility: "Claude Code (~/.claude/skills), OpenCode/Amp (~/.agents/skills), Opencode (~/.config/opencode/skills). Pure Markdown + HTML + JSON, no build step required."
 metadata:
   author: scene-req-to-demo
-  version: "0.0.1"
+  version: "0.0.2"
   domain: requirements-engineering
   cluster: software
   type: generative
@@ -193,7 +193,7 @@ Render per `assets/output-template.md` — 6 sections + Mermaid code block. This
 
 ### Demo HTML Output — Business System Frontend Prototype
 
-Render per `assets/prototype-template.md` + `assets/prototype-styles.md`:
+Render per `assets/prototype-template-detail.md` + `assets/prototype-styles-css.md`:
 
 - Single self-contained HTML file, Vue inlined (~160KB) for `file://` compatibility
 - **This is the business system itself** — e.g., a monitoring dashboard, work order list, or jurisdiction map — not a requirements viewer
@@ -202,6 +202,21 @@ Render per `assets/prototype-template.md` + `assets/prototype-styles.md`:
 - Interactions: filter/search, tab switching, drill-down, data visualization — as the real system would behave
 - Mock data derived from FR `example` fields; no backend required
 - Zero build step — double-click to open in Chrome
+
+---
+
+## Asset Loading Strategy — Context Optimization
+
+To fit within 256K context budgets (local models), this skill **lazy-loads** large assets:
+
+| Phase | Stage | Required Assets | Approx. Size |
+|-------|-------|-----------------|--------------|
+| **Phase 1** | Per-scene requirement collection | `SKILL.md` + `analysis-prompt.md` + `requirement-writing-guide.md` + `prototype-styles-tokens.md` + `prototype-template.md` (slim) | ~30 KB |
+| **Phase 2** | Reference page check | Same as Phase 1 | ~30 KB |
+| **Phase 3** | Merge & verify | + `verification-checklist.md` | ~37 KB |
+| **Phase 4** | Triple output | + `output-template.md` + `prototype-template-detail.md` + `prototype-styles-css.md` (only when building Demo) | ~67 KB |
+
+**Key principle**: `prototype-styles.md` and `prototype-template.md` are split into a **slim index** (always-readable) and a **detail file** (Phase 4 only). Do NOT load detail files in Phase 1-3 — they contain only CSS/HTML skeleton code needed for Demo generation.
 
 ---
 
@@ -224,16 +239,21 @@ The skill does NOT bundle or require any specific LLM SDK. See `assets/analysis-
 
 ## Assets Index
 
-| Asset | Purpose |
-|-------|---------|
-| `assets/analysis-prompt.md` | Core analysis prompt — rules, schema, FR granularity, RaR/CoVe |
-| `assets/domain-railway.md` | Railway/signal domain — glossary, interlocking + CBTC/TACS rules |
-| `assets/mermaid-rules.md` | Diagram type selection + generation rules (6 types) |
-| `assets/output-template.md` | Markdown 6-section template + field mapping |
-| `assets/requirement-writing-guide.md` | Requirement writing guide — 5 anchors, 6 sections, testability |
-| `assets/prototype-template.md` | Demo HTML structure + component spec + build steps |
-| `assets/prototype-styles.md` | Industrial dark-blue design tokens + component styles |
-| `assets/verification-checklist.md` | Quality checklist — CoVe + anchor + section completeness |
+| Asset | Phase | Purpose |
+|-------|-------|---------|
+| `assets/analysis-prompt.md` | 1-4 | Core analysis prompt — rules, schema, FR granularity, RaR/CoVe |
+| `assets/domain-railway.md` | 1-4 (conditional) | Railway/signal domain — glossary, interlocking + CBTC/TACS rules |
+| `assets/requirement-writing-guide.md` | 1-4 | Requirement writing guide — 5 anchors, 6 sections, testability |
+| `assets/verification-checklist.md` | 3 | Quality checklist — CoVe + anchor + section completeness |
+| `assets/output-template.md` | 4 | Markdown 6-section template + field mapping |
+| `assets/mermaid-rules.md` | 4 | Diagram type selection + generation rules (6 types) |
+| `assets/prototype-styles.md` | 1-4 (slim index) | Style index — what styles/components exist |
+| `assets/prototype-styles-tokens.md` | 1-4 (light) | Design tokens + component inventory reference |
+| `assets/prototype-styles-css.md` | 4 only (heavy) | Full CSS code to inline into Demo HTML |
+| `assets/prototype-template.md` | 1-4 (slim index) | Template index — positioning + tech choice |
+| `assets/prototype-template-detail.md` | 4 only (heavy) | Full Demo guide — layout, components, build steps, pitfalls |
+
+**Heavy files loaded only in Phase 4**: `prototype-styles-css.md` (11 KB) + `prototype-template-detail.md` (15 KB). Total Phase 4 footprint is ~67 KB. Phase 1-3 footprint is ~30 KB.
 
 ---
 
@@ -243,3 +263,4 @@ The skill does NOT bundle or require any specific LLM SDK. See `assets/analysis-
 - Frontend design language: CASCO 12×24 grid, dark-blue industrial dashboard (3 screenshots + 2 HTML references)
 - Prompt engineering: RaR (Rephrase and Respond) + CoVe (Chain-of-Verification) + seed stability
 - Existing skills: `requirements-analysis` (diagnostic) + `mermaid-diagrams` (syntax) + `frontend-design` / `baoyu-design` (aesthetics)
+- Similar projects researched: [franklinxkk/ai-delivery-spec](https://github.com/franklinxkk/ai-delivery-spec) (lifecycle entry diagnosis), [Paritck/prototype-spec-html](https://github.com/Paritck/prototype-spec-html) (element-level annotation), [qierkang/product-dev-skill](https://github.com/qierkang/product-dev-skill) (reverse direction: prototype → requirements)

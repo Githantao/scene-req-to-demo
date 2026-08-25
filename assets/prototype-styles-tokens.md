@@ -1,7 +1,7 @@
-# 原型样式 — Index
+# 原型样式参考 — Style Tokens Reference
 
-> **Demo 生成时**：完整 CSS 在 [`prototype-styles-css.md`](./prototype-styles-css.md)（Phase 4 专用，约 13KB）。
-> **设计时参考**：组件清单与 Design Tokens 在 [`prototype-styles-tokens.md`](./prototype-styles-tokens.md)（约 1.5KB，所有阶段可读）。
+> Demo 设计时使用：理解可用的视觉变量与组件样式清单。
+> **不包含完整 CSS 代码** — Demo 生成时使用 `prototype-styles-css.md`。
 
 ## 一、Design Tokens
 
@@ -85,30 +85,29 @@ body.theme-light-blue {
 
 ---
 
-## 引用方式
-
-| 阶段 | 读取文件 |
-|------|---------|
-| Phase 1-3（需求分析） | `prototype-styles-tokens.md` |
-| Phase 4（Demo 生成） | `prototype-styles-css.md`（完整 CSS 内联到 HTML） |
+---
 
 ## 组件样式清单
 
 | 组件 | CSS 类 | 用途 |
 |------|-------|------|
-| Header | `.proto-header` / `.header-left` / `.header-right` | 顶栏 |
-| 12 列布局 | `.proto-main` / `.proto-sidebar` / `.proto-center` / `.proto-right` | Dashboard 三栏 |
-| 卡片通用 | `.card` / `.card-title` | 内容卡片 |
-| 三层需求 | `.layers-row` / `.layer-card` / `.layer-biz/user/sys` | BR/UR/SR |
-| 总体需求 | `.main-req-card` / `.main-req-label/name/desc` | 主需求卡片 |
-| FR 卡片 | `.req-card` / `.req-h/id/n/d/anchors` | 功能需求 |
-| 统计卡片 | `.stat-card` / `.stat-card-label/value` | 数据卡片 |
+| Header | `.proto-header` / `.header-left` / `.header-right` | 顶栏标题与控件 |
+| 12 列布局 | `.proto-main` / `.proto-sidebar` / `.proto-center` / `.proto-right` | Dashboard 三栏布局 |
+| 卡片通用 | `.card` / `.card-title` | 通用内容卡片 |
+| 三层需求 | `.layers-row` / `.layer-card` / `.layer-biz` / `.layer-user` / `.layer-sys` | BR/UR/SR 三层 |
+| 总体需求 | `.main-req-card` / `.main-req-label` / `.main-req-name` / `.main-req-desc` | 蓝色发光边框主需求 |
+| FR 卡片 | `.req-card` / `.req-h` / `.req-id` / `.priority-badge` / `.req-n` / `.req-d` / `.req-anchors` | 功能需求（带5锚点） |
+| 统计卡片 | `.stat-card` / `.stat-card-label` / `.stat-card-value` | 数据卡片 |
 | 图表 | `.diagram-box` / `.mermaid-svg` | 图表容器 |
-| 代码编辑器 | `.editor-textarea` | Mermaid 编辑器 |
+| 代码编辑器 | `.editor-textarea` / `.editor-toolbar` | 内联代码编辑器 |
 | 数据流/NFR | `.df-item` / `.nfr` | 列表 |
-| 状态色 | `.status-red/orange/yellow/purple/blue/green` | 五色徽标 |
-| 主题 | `body.theme-dark-blue/light-blue` | 暗/亮主题 |
+| 侧边导航 | `.nav-item` | 左栏导航 |
+| 状态色 | `.status-red` / `.status-orange` / `.status-yellow` / `.status-purple` / `.status-blue` / `.status-green` | 五色状态徽标 |
+| 主题 | `body.theme-dark-blue` / `body.theme-light-blue` | 暗色/亮色主题切换 |
 
 ---
 
-> 完整 CSS 见 `prototype-styles-css.md`。本文件仅作目录索引。
+## 引用方式
+
+**Phase 4（Demo 生成）时**：完整读取 `prototype-styles-css.md` 并内联到 `<style>` 标签
+**Phase 1-3（需求分析）时**：仅读取本文件理解可用的样式与组件，避免上下文占用
