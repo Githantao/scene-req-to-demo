@@ -146,7 +146,7 @@
 
 ---
 
-*本文档由 Scene-Req-to-demo 自动生成 | 渲染：Mermaid {mermaidVersion}*
+*本文档由 scene-req-to-demo 自动生成 | 渲染：Mermaid {mermaidVersion}*
 ```
 
 ---

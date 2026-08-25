@@ -1,6 +1,6 @@
 # 核心分析指令 — Analysis Prompt
 
-> 本文件是 `Scene-Req-to-demo` 的核心 LLM 指令。
+> 本文件是 `scene-req-to-demo` 的核心 LLM 指令。
 > 将以下内容作为 **system prompt** 发送给任意兼容 OpenAI Chat Completions 格式的 LLM。
 > 推荐参数：`temperature: 0.2, top_p: 0.9, max_tokens: 4096, seed: 42`
 
@@ -126,7 +126,7 @@
 | `temperature` | `0.2` | 结构化任务需要确定性输出 |
 | `top_p` | `0.9` | 保持适度多样性 |
 | `max_tokens` | `4096` | Mermaid 代码 + 中文描述易超 2048 |
-| `seed` | `42` | 使输出更稳定（OpenAI/WebLLM 支持） |
+| `seed` | `42` | 使输出更稳定（支持 OpenAI-compatible 接口） |
 
 > 注意：`response_format: {type: 'json_object'}` 不兼容小模型（Qwen2.5-1.5B 等），**不要使用**，改为在 prompt 中强调"严格输出 JSON"。
 

@@ -1,10 +1,10 @@
 ---
-name: Scene-Req-to-demo
+name: scene-req-to-demo
 description: "Transform natural-language scene descriptions into structured requirement documents (6-section Markdown), high-fidelity interactive frontend prototypes (industrial dark-blue dashboard), and Mermaid diagrams. Supports optional railway/CBTC domain knowledge injection. Use when the user wants to turn a vague idea or oral description into reviewable, developable, testable requirement deliverables."
 license: MIT
 compatibility: "Claude Code (~/.claude/skills), OpenCode/Amp (~/.agents/skills), Opencode (~/.config/opencode/skills). Pure Markdown + HTML + JSON, no build step required."
 metadata:
-  author: scene-to-req
+  author: scene-req-to-demo
   version: "0.0.1"
   domain: requirements-engineering
   cluster: software
@@ -48,7 +48,7 @@ Trigger when the user says (or implies) any of:
 | Skill | Role | When |
 |-------|------|------|
 | `requirements-analysis` | 诊断：问题是否清晰、约束是否明确、范围是否合理（RA0–RA5） | 前置 — 先确认"要解决什么问题" |
-| `Scene-Req-to-demo` (this skill) | 生成：把清晰的场景描述变成可交付的需求文档+原型 | 后置 — 再把"要做什么"落到文档和 Demo |
+| `scene-req-to-demo` (this skill) | 生成：把清晰的场景描述变成可交付的需求文档+原型 | 后置 — 再把"要做什么"落到文档和 Demo |
 
 If the user's description is very vague or solution-first, consider running `requirements-analysis` first to clarify the problem, then use this skill to generate deliverables.
 
@@ -214,7 +214,7 @@ This skill defines **what** to generate (prompt + schema + templates), not **how
 | Claude API | Send `assets/analysis-prompt.md` as system prompt + scene as user message |
 | OpenAI API | Same — system + user messages, `temperature: 0.2, max_tokens: 4096` |
 | Ollama (local) | Same, via `http://localhost:11434/v1/chat/completions` |
-| WebLLM (browser) | Same, via `engine.chat.completions.create()` |
+| Any OpenAI-compatible (WebLLM / Ollama / LM Studio) | Same, via `chat.completions.create()` |
 
 The skill does NOT bundle or require any specific LLM SDK. See `assets/analysis-prompt.md` for the full prompt text.
 
