@@ -68,7 +68,7 @@ def render_markdown(analysis: dict) -> str:
     md = []
     md.append(f"# {req.get('title', '未命名系统')}需求文档")
     md.append("")
-    md.append(f"> 生成时间：{now} | 图表类型：{req.get('diagramType', 'flowchart')} | Skill: scene-req-to-demo v0.0.4")
+    md.append(f"> 生成时间：{now} | 图表类型：{req.get('diagramType', 'flowchart')} | Skill: scene-req-to-demo v0.0.5")
     md.append("")
 
     if detect_safety(analysis):

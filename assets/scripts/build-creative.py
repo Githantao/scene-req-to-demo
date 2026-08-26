@@ -107,6 +107,18 @@ def main():
     out_path = Path(args.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(html, encoding="utf-8")
+
+    # Clean up intermediate template (consumed into output) so it isn't mistaken
+    # for a deliverable. Only auto-remove *.tpl.html inputs that differ from output.
+    if args.input:
+        in_path = Path(args.input)
+        if in_path.name.endswith(".tpl.html") and in_path.resolve() != out_path.resolve():
+            try:
+                in_path.unlink()
+                print(f"✓ cleaned intermediate: {in_path.name}", file=sys.stderr)
+            except OSError:
+                pass
+
     print(str(out_path))
 
 

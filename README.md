@@ -4,11 +4,11 @@
 
 主要面向**铁路轨道交通信号系统**（联锁/列控/ATS/CTC/监测/运维），也适用通用业务系统。
 
-## 核心特性（v0.0.4）
+## 核心特性（v0.0.5）
 
 - **子系统识别**：`analyze.py` 自动判定 `safety / ats / ctc / monitoring / iom / general`，驱动领域规则与 Demo 布局
 - **安全标记**：安全苛求功能（联锁/防护类）**自动**在 Demo 注入"安全功能阐述图·实际安全系统无操作前端界面"横幅，Markdown 注入安全声明
-- **双轨 Demo**：约束版（脚本统一布局，评审用）+ 创意版（按子系统界面骨架 + 信息化技术灵感，启发用；`build-creative.py` 注入 Vue 并 `node --check` 冒烟测试）
+- **双轨 Demo**：约束版（两段式：需求范围视图+整体效果示意，评审用）+ 创意版（按子系统界面骨架 + 信息化技术灵感，启发用；`build-creative.py` 注入 Vue 并 `node --check` 冒烟测试）
 - **GAP 纪律**：量化指标无依据必须标 `[假设]/[GAP]`，防编造
 - **FR 扩展**：5 锚点 + `safetyRelevance` + `acceptanceCriteria`
 
@@ -23,7 +23,13 @@ ln -sf ~/.agents/skills/scene-req-to-demo ~/.config/opencode/skills/scene-req-to
 git -C ~/.agents/skills/scene-req-to-demo pull
 ```
 
-> 其他 agent：把 `~/.agents/skills/scene-req-to-demo` 软链/复制到对应 skill 目录（Claude Code 用 `~/.claude/skills/`，Amp 用 `~/.config/amp/skills/`）。
+> 其他 agent：把 `~/.agents/skills/scene-req-to-demo` **软链**（推荐，勿用复制）到对应 skill 目录：
+> ```bash
+> ln -sf ~/.agents/skills/scene-req-to-demo ~/.workbuddy/skills/scene-req-to-demo   # WorkBuddy
+> ln -sf ~/.agents/skills/scene-req-to-demo ~/.claude/skills/scene-req-to-demo       # Claude Code
+> ln -sf ~/.agents/skills/scene-req-to-demo ~/.config/amp/skills/scene-req-to-demo   # Amp
+> ```
+> ⚠️ **务必用软链、保持单一权威副本**。若某处是独立的实体副本，升级时会漂移成旧版——而 SKILL.md 的 find helper 会优先命中第一个找到的副本，导致跑到旧脚本、出旧布局（这是 v0.0.5 修复过的坑）。
 
 ### 不用 git？下载 Release 资产
 
@@ -66,14 +72,14 @@ python3 assets/scripts/build-creative.py \
 ```
 scene-req-to-demo/
 ├── SKILL.md                        # Agent 指令（主入口，含 Asset Loading Strategy）
-├── run.sh / standalone.sh          # 一键/独立执行
+├── DESIGN.md                       # 需求设计基准（维护者用，防跑飞；非运行时资产）
 ├── assets/
 │   ├── scripts/
 │   │   ├── analyze.py              # Phase 1 校验 + 子系统检测
 │   │   ├── validate-anchors.py     # Phase 3 锚点/安全/GAP 校验
 │   │   ├── render-markdown.py      # Phase 4 Markdown 渲染（+安全声明）
-│   │   ├── render-demo.py          # Phase 4 约束版渲染（+安全横幅）
-│   │   ├── build-creative.py       # Phase 4b 创意版组装 + node --check
+│   │   ├── render-demo.py          # Phase 4 约束版渲染（两段式 + 安全横幅，CSS 内置）
+│   │   ├── build-creative.py       # Phase 4b 创意版组装 + node --check + 清理 tpl
 │   │   ├── README.md               # 脚本契约 + JSON schema 单一事实源
 │   │   ├── examples/sample.json
 │   │   └── vendor/vue.global.prod.js
@@ -82,10 +88,11 @@ scene-req-to-demo/
 │   ├── output-template.md          # Markdown 模板（fallback）
 │   ├── verification-checklist.md   # 质量检查清单
 │   ├── domain-railway.md           # 铁路领域：安全篇 + 非安全篇 + 三条铁律
-│   ├── prototype-domain-ui.md      # 四子系统界面传统（创意版骨架）
+│   ├── prototype-domain-ui.md      # 四子系统分区拓扑 + 两段式说明 + 配色惯例
 │   ├── prototype-tech-inspiration.md# 信息化技术灵感库（创意版）
-│   ├── prototype-template*.md      # Demo 布局（slim + detail）
-│   ├── prototype-styles-*.md       # 样式（tokens + css）
+│   ├── prototype-template.md       # Demo 模板索引
+│   ├── prototype-template-detail.md# 创意版布局细节
+│   ├── prototype-styles-tokens.md  # 设计 tokens（配色/组件变量）
 │   └── mermaid-rules.md            # 图表规则
 └── README.md                       # 本文件
 ```
@@ -106,6 +113,6 @@ scene-req-to-demo/
 
 ## 版本
 
-- 当前版本：**v0.0.4**
-- v0.0.4：子系统识别 / 安全标记自动注入 / build-creative 冒烟 / FR 扩展字段 / GAP 纪律 / 领域拆分安全篇+非安全篇 / 创意版灵感库
+- 当前版本：**v0.0.5**
+- v0.0.5：子系统识别 / 安全标记自动注入 / build-creative 冒烟 / FR 扩展字段 / GAP 纪律 / 领域拆分安全篇+非安全篇 / 创意版灵感库
 - 更新日志见 git log
