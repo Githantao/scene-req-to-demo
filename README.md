@@ -12,29 +12,24 @@
 - **GAP 纪律**：量化指标无依据必须标 `[假设]/[GAP]`，防编造
 - **FR 扩展**：5 锚点 + `safetyRelevance` + `acceptanceCriteria`
 
-## 快速安装
-
-### Claude Code
+## 快速安装（推荐：git clone，无缝升级）
 
 ```bash
-cp -r scene-req-to-demo ~/.claude/skills/        # 全局
-cp -r scene-req-to-demo .claude/skills/          # 或项目级
+# 安装（文件夹名稳定为 scene-req-to-demo）
+git clone https://github.com/Githantao/scene-req-to-demo.git ~/.agents/skills/scene-req-to-demo
+ln -sf ~/.agents/skills/scene-req-to-demo ~/.config/opencode/skills/scene-req-to-demo
+
+# 升级到新版本（原地，不产生新文件夹）
+git -C ~/.agents/skills/scene-req-to-demo pull
 ```
 
-### OpenCode
+> 其他 agent：把 `~/.agents/skills/scene-req-to-demo` 软链/复制到对应 skill 目录（Claude Code 用 `~/.claude/skills/`，Amp 用 `~/.config/amp/skills/`）。
 
-```bash
-ln -sf $(pwd)/scene-req-to-demo ~/.agents/skills/scene-req-to-demo
-ln -sf $(pwd)/scene-req-to-demo ~/.config/opencode/skills/scene-req-to-demo
-```
+### 不用 git？下载 Release 资产
 
-### Amp / 其他
+从 Release 页下载 **`scene-req-to-demo.zip`**（Assets），解压即稳定的 `scene-req-to-demo/` 目录，覆盖旧安装即可。
 
-```bash
-ln -sf $(pwd)/scene-req-to-demo ~/.config/amp/skills/scene-req-to-demo
-```
-
-将整个目录复制到 agent 的 skill 目录即可。
+> ⚠️ 不要下载 GitHub 自动生成的 "Source code (zip)"——它带 `-版本号` 后缀，每次升级产生新文件夹，无法无缝覆盖。
 
 ## 使用方式
 
