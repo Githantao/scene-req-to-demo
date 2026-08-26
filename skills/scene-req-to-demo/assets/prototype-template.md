@@ -36,7 +36,7 @@ FR-4 "统计维度与可视化" → Demo 中的筛选控件 + 趋势图
 <!-- Vue 已内联，不依赖 CDN -->
 <script>/* vue.global.prod.js 内联内容约 160KB */</script>
 <style>
-  /* 内联 prototype-styles.md 的全部样式 */
+  /* 样式以 prototype-styles-tokens.md 的 Design Tokens 为准；约束版 CSS 已内置于 render-demo.py */
 </style>
 ```
 

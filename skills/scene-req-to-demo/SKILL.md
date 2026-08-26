@@ -2,10 +2,10 @@
 name: scene-req-to-demo
 description: "场景需求分析→结构化需求文档+业务系统原型。Scene description → structured requirements + interactive prototype. Trigger when user describes a system feature/module/page, or says 场景需求/需求分析/场景描述/分析以下场景/交接班/看板/填报/查询/原型生成. Uses Python scripts in assets/scripts/."
 license: MIT
-compatibility: "Claude Code (~/.claude/skills, ~/.agents/skills), OpenCode (~/.config/opencode/skills, ~/.agents/skills), Amp (~/.config/amp/skills). Requires Python 3+."
+compatibility: "Claude Code (~/.claude/skills, ~/.agents/skills), OpenCode (~/.config/opencode/skills, ~/.agents/skills), WorkBuddy (~/.workbuddy/skills), Amp (~/.config/amp/skills). Requires Python 3+."
 metadata:
   author: scene-req-to-demo
-  version: "0.0.4"
+  version: "0.0.5"
   domain: requirements-engineering
 ---
 
@@ -30,8 +30,10 @@ Trigger when the user says (or implies) any of:
 Run this Bash command first to locate the scripts:
 
 ```bash
-SKILL_DIR=$(find ~/.agents/skills ~/.config/opencode/skills ~/.claude/skills -name "SKILL.md" -path "*/scene-req-to-demo/*" 2>/dev/null | head -1 | xargs dirname)
+SKILL_DIR=$(find ~/.workbuddy/skills ~/.agents/skills ~/.config/opencode/skills ~/.claude/skills ~/.config/amp/skills -name "SKILL.md" -path "*/scene-req-to-demo/*" 2>/dev/null | head -1 | xargs dirname)
 ```
+
+> 若 `SKILL_DIR` 为空，说明当前 agent 的 skill 目录不在上述列表中——请手动定位本文件所在目录并赋值。
 
 ## ⭐ Read first: `assets/scripts/README.md`
 
@@ -46,8 +48,8 @@ SKILL_DIR=$(find ~/.agents/skills ~/.config/opencode/skills ~/.claude/skills -na
 | 契约 | `SKILL.md` + `scripts/README.md` | ~13 KB | ~13 KB |
 | Phase 1（生成 JSON） | + `analysis-prompt.md` + `requirement-writing-guide.md` + `scripts/examples/sample.json` | ~18 KB | ~31 KB |
 | Phase 3（校验合并） | + `verification-checklist.md` | ~6 KB | ~37 KB |
-| Phase 4（渲染） | + `prototype-template.md` + `prototype-styles-tokens.md` | ~7 KB | ~44 KB |
-| Phase 4b（创意版） | + `prototype-template-detail.md` + `prototype-styles-css.md` + `prototype-domain-ui.md` + `prototype-tech-inspiration.md` | ~33 KB | ~77 KB |
+| Phase 4（约束版渲染） | 无需额外加载（`render-demo.py` 自包含：CSS/分区拓扑/拟真模板均内置，直接运行即可） | ~0 KB | ~37 KB |
+| Phase 4b（创意版） | + `prototype-template-detail.md` + `prototype-domain-ui.md` + `prototype-tech-inspiration.md` | ~26 KB | ~63 KB |
 | 条件：铁路领域 | + `domain-railway.md`（`domain_info.matched=true` 时，按 `subsystem` 选章节） | ~7 KB | +7 KB |
 | 条件：图表生成 | + `mermaid-rules.md` | ~6 KB | +6 KB |
 
@@ -151,8 +153,10 @@ python3 $SKILL_DIR/assets/scripts/render-markdown.py --output-dir ./output < ./o
 python3 $SKILL_DIR/assets/scripts/render-demo.py --output-dir ./output < ./output/merged.json
 ```
 
-- 约束版：单页面承载所有 FR，按 FR 角色自动布局（中央视图区+工具栏+侧边栏），暗蓝工业风。
-- **安全标记自动注入**：检测到安全苛求功能时，脚本自动在 Demo 顶部加"安全功能阐述图·实际安全系统无操作前端界面"横幅+角标，并在 Markdown 加安全声明。无需手动处理。
+- **约束版两段式**（非安全子系统，脚本按 `subsystem` 自动适配）：
+  - **上段「需求范围视图」**：渲染子系统整体布局架构（全部分区），本次 FR 按语义落位高亮，无 FR 的分区标「非本次需求范围」——不把需求硬铺满整页。
+  - **下段「整体效果示意」**：同一架构的生产级拟真观感（全分区按类型拟真 + 示意数据，标注「示意」）。
+- **安全场景**（`subsystem=safety`）：不渲染两段式，改为**阐述图**（逐条安全功能 + 验收准则），并自动注入「安全功能阐述图·实际安全系统无操作前端界面」横幅 + 角标；Markdown 同步注入安全声明。无需手动处理。
 - 如 Step 4 有参考 CSS：追加 `--css-file ./output/ref-styles.css`。
 
 #### 6b — 创意版 Demo（仅非安全子系统）

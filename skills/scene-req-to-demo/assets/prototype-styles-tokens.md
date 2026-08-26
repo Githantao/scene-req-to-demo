@@ -1,7 +1,8 @@
 # 原型样式参考 — Style Tokens Reference
 
-> Demo 设计时使用：理解可用的视觉变量与组件样式清单。
-> **不包含完整 CSS 代码** — Demo 生成时使用 `prototype-styles-css.md`。
+> Demo 设计时使用：理解可用的视觉变量（Design Tokens）与组件样式清单。
+> **约束版**：完整 CSS 已内置于 `assets/scripts/render-demo.py`（`DESIGN_TOKENS_CSS`），无需手动内联。
+> **创意版**：LLM 以本文件的 tokens 为设计基准，自主编写样式。
 
 ## 一、Design Tokens
 
@@ -109,5 +110,6 @@ body.theme-light-blue {
 
 ## 引用方式
 
-**Phase 4（Demo 生成）时**：完整读取 `prototype-styles-css.md` 并内联到 `<style>` 标签
-**Phase 1-3（需求分析）时**：仅读取本文件理解可用的样式与组件，避免上下文占用
+**约束版**：CSS 已内置于 `render-demo.py`，直接运行脚本即可，无需读本文件。
+**创意版（Phase 4b）**：以本文件的 Design Tokens 为视觉基准，LLM 自主编写样式。
+**Step 4（参考页）**：生成 `ref-styles.css` 覆盖 `:root` 变量时，参考本文件的变量名。

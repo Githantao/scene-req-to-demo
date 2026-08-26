@@ -1,9 +1,9 @@
 # Scene Requirements Generator — 本地安装与使用说明
 
 > Skill 名称：`scene-req-to-demo`
-> 版本：v0.0.4 | 协议：MIT
+> 版本：v0.0.5 | 协议：MIT
 
-> **v0.0.4 要点**：① 子系统识别（safety/ats/ctc/monitoring/iom/general）；② 安全苛求功能自动注入"安全功能阐述图"横幅/声明（安全系统无操作前端）；③ 双轨 Demo——约束版（脚本统一布局）+ 创意版（`build-creative.py` 组装并 `node --check` 冒烟）；④ FR 扩展字段 `safetyRelevance`/`acceptanceCriteria`；⑤ GAP 纪律（量化指标无依据标 `[假设]/[GAP]`）。详见 `skills/scene-req-to-demo/SKILL.md`。
+> **v0.0.5 要点**：① 子系统识别（safety/ats/ctc/monitoring/iom/general）；② 安全苛求功能自动注入"安全功能阐述图"横幅/声明（安全系统无操作前端）；③ 双轨 Demo——约束版（两段式：上段需求范围视图+下段整体效果示意）+ 创意版（`build-creative.py` 组装并 `node --check` 冒烟）；④ FR 扩展字段 `safetyRelevance`/`acceptanceCriteria`；⑤ GAP 纪律（量化指标无依据标 `[假设]/[GAP]`）。详见 `skills/scene-req-to-demo/SKILL.md`。
 
 ---
 
@@ -42,12 +42,12 @@ ln -s ~/.agents/skills/scene-req-to-demo ~/.claude/skills/scene-req-to-demo
 ```bash
 # 检查主文件是否存在
 ls ~/.agents/skills/scene-req-to-demo/SKILL.md
-ls ~/.agents/skills/scene-req-to-demo/assets/ | wc -l
-# 应输出 8（7 个资产文件 + 可能的额外文件）
+ls ~/.agents/skills/scene-req-to-demo/DESIGN.md  # 设计基准
 
-# 检查多位置
-ls -la ~/.config/opencode/skills/scene-req-to-demo  # 应为 symlink
-ls -la ~/.claude/skills/scene-req-to-demo            # 应为 symlink
+# 检查多位置（应为 symlink，指向同一权威副本）
+ls -la ~/.config/opencode/skills/scene-req-to-demo  # 软链 → ~/.agents/skills/scene-req-to-demo
+ls -la ~/.workbuddy/skills/scene-req-to-demo        # 软链 → 同上
+ls -la ~/.claude/skills/scene-req-to-demo           # 软链 → 同上
 ```
 
 ---
@@ -56,16 +56,30 @@ ls -la ~/.claude/skills/scene-req-to-demo            # 应为 symlink
 
 ```
 scene-req-to-demo/
-├── SKILL.md                              # 主文件：触发、工作流、三重输出
+├── SKILL.md                              # 主文件：触发、7 步工作流、双轨输出
+├── DESIGN.md                             # 设计基准（维护者用，防跑飞；非运行时）
+├── README.md                             # 快速安装 + 产物说明 + 目录结构
 └── assets/
     ├── analysis-prompt.md                 # 核心分析指令（LLM system prompt）
-    ├── domain-railway.md                  # 铁路信号领域知识（可选，需关键词触发）
-    ├── mermaid-rules.md                   # 图表类型选择 + 生成规则
-    ├── output-template.md                 # Markdown 六段式输出模板
     ├── requirement-writing-guide.md       # 需求表述规范（5锚点 + 6段式）
-    ├── prototype-template.md              # Demo HTML 原型模板 + 构建指南
-    ├── prototype-styles.md               # 暗蓝工业风样式规范
-    └── verification-checklist.md          # 质量验证清单
+    ├── output-template.md                 # Markdown 六段式输出模板（fallback）
+    ├── verification-checklist.md          # 质量检查清单
+    ├── domain-railway.md                  # 铁路信号领域：安全篇+非安全篇+三铁律（可选注入）
+    ├── mermaid-rules.md                   # 图表类型选择 + 生成规则
+    ├── prototype-domain-ui.md             # 四子系统分区拓扑 + 两段式说明 + 配色惯例
+    ├── prototype-tech-inspiration.md      # 创意版技术灵感库（信息化）
+    ├── prototype-template.md              # Demo 模板索引（Phase 4 入口）
+    ├── prototype-template-detail.md       # 创意版布局细节（Phase 4b）
+    ├── prototype-styles-tokens.md         # 设计 tokens（配色/组件变量）
+    └── scripts/
+        ├── README.md                      # 脚本契约 + JSON schema 单一事实源
+        ├── analyze.py                     # Phase1 校验 + 子系统检测
+        ├── validate-anchors.py            # Phase3 锚点/安全/GAP 校验
+        ├── render-markdown.py             # Phase4 Markdown 渲染（+安全声明）
+        ├── render-demo.py                 # Phase4 约束版渲染（两段式 + 安全横幅，CSS 内置）
+        ├── build-creative.py              # Phase4b 创意版组装 + node --check
+        ├── examples/sample.json
+        └── vendor/vue.global.prod.js
 ```
 
 ---
@@ -92,7 +106,7 @@ scene-req-to-demo/
 | 输入 | 输出 |
 |------|------|
 | 一段自然语言场景描述（中文，任意长度） | ① Markdown 六段式需求文档（安全场景自动加安全声明） |
-| | ② 约束版 Demo HTML（脚本统一布局，暗蓝工业风；安全场景自动加阐述横幅） |
+| | ② 约束版 Demo HTML（两段式：需求范围视图+整体效果示意；安全场景为阐述图） |
 | | ③ 创意版 Demo HTML（非安全子系统；子系统骨架+技术灵感，build-creative 组装+冒烟） |
 | | ④ 结构化 JSON（含 Mermaid 代码） |
 
@@ -130,7 +144,7 @@ CBTC / TACS / ZC / VOBC / DCS / OC / MA / 移动闭塞
 ```markdown
 一、业务背景及目标（提出方/问题层级/现状/解决层级/预期成效）
 二、总体需求（1 条 mainRequirement + 系统边界 + 干系人 + 三层需求）
-三、功能需求（2–6 条 FR，每条含 5 锚点：位置/数据/配置/默认/示例）
+三、功能需求（2–6 条 FR，每条含 5 锚点：位置/数据/配置/默认/示例 + safetyRelevance/acceptanceCriteria 扩展）
 四、接口需求（有则列出，无则标"无"）
 五、数据需求（有则列出，无则标"无"）
 六、非功能性需求（标注硬性约束 vs 假设）
@@ -138,14 +152,22 @@ CBTC / TACS / ZC / VOBC / DCS / OC / MA / 移动闭塞
 附录 B：结构化 JSON
 ```
 
-### 4.2 Demo HTML 原型
+- **GAP 纪律**：量化指标无依据必须标 `[假设]/[GAP]`，禁止编造。
+- 安全场景自动注入安全声明（Markdown）与阐述横幅（Demo）。
 
-- **文件**：`{系统名称}-demo.html`（单文件，~50KB）
-- **打开**：双击用 Chrome/Edge 打开即可，无需任何构建
-- **依赖**：CDN 加载 `vue@3` + `mermaid@11`（jsdelivr）
-- **主题**：暗蓝工业风（`#0a1e3c` 基底 + 霓虹五色状态徽标）
-- **交互**：卡片折叠、FR 锚点展开、图表类型切换、Mermaid 实时编辑、主题切换、导出 Markdown
-- **布局**：12 列网格，响应式（大屏三栏 → 平板两栏 → 手机单栏）
+### 4.2 Demo HTML 原型（双轨）
+
+**约束版**（`{标题}.html`，脚本确定性生成，两段式）：
+
+- 单页面按子系统自动适配布局（safety→阐述图；非安全→上段需求范围视图 + 下段整体效果示意，不把需求硬铺满整页）
+- 打开：双击用 Chrome/Edge 打开即可，无需任何构建（Vue 已内联，`file://` 双击即用）
+- 主题：暗蓝工业风（`#0a1e3c` 基底 + 霓虹五色状态徽标）；响应式
+- 交互：筛选联动、上段落位高亮/非范围标记、下段拟真模板（示意数据）
+
+**创意版**（`{标题}-creative.html`，仅非安全子系统，LLM 自由发挥）：
+
+- 专业下限按 `prototype-domain-ui.md` 子系统骨架；叠加 `prototype-tech-inspiration.md` 技术灵感
+- 通过 `build-creative.py` 注入 Vue（占位符 `<!--__INJECT_VUE__-->`）并 `node --check` 冒烟测试（失败不产出）；中间 `*.tpl.html` 自动删除
 
 ### 4.3 结构化 JSON
 

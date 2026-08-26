@@ -10,6 +10,7 @@ output/
 # 调试/截图产物
 .playwright-mcp/
 *.png
+!docs/manual-screenshots/*.png
 *.log
 headroom_memory.db
 app-dom.html

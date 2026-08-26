@@ -115,7 +115,7 @@
 </div>
 ```
 
-卡片样式参考 `prototype-styles.md` 的五色状态徽标体系：
+卡片样式参考 `prototype-styles-tokens.md` 的五色状态徽标体系：
 - `high` → 红色发光边框
 - `medium` → 橙色
 - `low` → 蓝色
@@ -193,7 +193,7 @@
 |------|------|------|----------|
 | **A. 功能叠加** | 有基础页面 + 新增 FR | 保留原有布局/已实现的功能区，在其上新增 FR 对应的功能区/卡片；复用原有样式变量 | 迭代开发：已有系统新增模块 |
 | **B. 风格复制** | 有参考页面，无需保留其功能 | 提取参考页的视觉特征（色板/字体/间距/卡片样式/导航形态），新 Demo 按此风格全新排布所有 FR | 全新系统但需与现有系统视觉一致 |
-| **C. 全新生成** | 无参考页面 | 按本文件 §四 的默认布局 + `prototype-styles.md` 暗蓝工业风全新生成 | 从零开始的新系统 |
+| **C. 全新生成** | 无参考页面 | 按本文件 §四 的默认布局 + `prototype-styles-tokens.md` 暗蓝工业风 tokens 全新生成 | 从零开始的新系统 |
 
 > **Agent 执行时**：收到参考材料后，先用一句话概括提取到的风格特征（如"深蓝大屏 + 12宫格 + 霓虹状态色"），再进入构建步骤。
 
@@ -212,7 +212,7 @@
    - 数据：按 example 生成模拟数据（补充至饱满）
    - 交互：按 description 确定可交互行为
 5. 组装单 HTML 文件：
-   - <head> 中内联所有 CSS（参考页样式或 prototype-styles.md 默认样式）
+   - <head> 中内联所有 CSS（参考页样式，或按 prototype-styles-tokens.md 的 tokens 自写）
    - <body> 中按"整体布局"组织业务界面 DOM
    - <script> 中（不用 type="module"，避免 file:// CORS）：
      a. Vue 已内联（全局 Vue）
@@ -236,7 +236,7 @@
 <title>{title}</title>
 <script>/* 内联 vue.global.prod.js 约 160KB，确保 file:// 双击即用 */</script>
 <style>
-  /* 内联 prototype-styles.md 的全部样式 */
+  /* 样式按 prototype-styles-tokens.md 的 Design Tokens 自写；约束版 CSS 已内置于 render-demo.py */
 </style>
 </head>
 <body class="theme-dark-blue">
@@ -301,7 +301,7 @@ Demo HTML 和 Markdown 文档**同源渲染**（同一份 JSON 中间产物）�
 ```
 JSON 中间产物
   ├──→ output-template.md 渲染 → {title}.md（需求文档：6段+5锚点+Mermaid）
-  └──→ prototype-template.md + prototype-styles.md 渲染 → {title}-demo.html（业务系统前端原型）
+  └──→ render-demo.py（约束版，CSS 内置）渲染 → {title}.html（业务系统前端原型）
 ```
 
 **一致性保证**：
