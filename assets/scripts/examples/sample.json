@@ -1,0 +1,70 @@
+{
+  "_comment": "Complete reference analysis (1 scene, 3 FRs). Use as a sample for LLM to follow schema; do NOT paste this into context unless teaching the schema.",
+  "scene": "用户来电时自动展示该号码历史工单、通话记录，支持按工单、客户信息检索录音，录音与工单一一对应绑定。",
+  "analysis": {
+    "businessContext": {
+      "proposer": "客服中心",
+      "problemLevel": "工班级（一线客服）",
+      "currentState": "当前来电后需手动查询客户历史工单和通话记录，录音与工单分散存储，客服响应效率低。",
+      "targetLevel": "信息化",
+      "expectedBenefit": "减少50%手动查询时间，客服首响效率提升40%"
+    },
+    "requirements": {
+      "title": "来电关联工单与录音管理",
+      "diagramType": "sequenceDiagram",
+      "layers": {
+        "business": {"goal": "提升客服首响效率", "value": "缩短客户等待时间"},
+        "user": {"scenario": "客服接听电话时快速了解客户历史", "painPoints": ["手动查询繁琐", "录音难定位"]},
+        "system": {"summary": "自动关联工单/通话，提供录音检索与绑定"}
+      },
+      "mainRequirement": {
+        "name": "来电关联工单与录音管理",
+        "description": "用户来电时自动展示历史工单和通话，支持按工单/客户检索录音，录音与工单一一绑定。考虑到不同业务的差异，配置项需支持项目级。"
+      },
+      "systemBoundary": "仅负责关联查询与录音绑定，不含语音接入",
+      "stakeholders": ["一线客服", "客服主管"],
+      "functionalRequirements": [
+        {
+          "id": "FR-1",
+          "name": "来电自动关联展示",
+          "description": "用户来电时系统根据号码自动展示历史工单和通话记录",
+          "priority": "high",
+          "uiLocation": "客服工作台来电弹屏首位",
+          "dataSource": "根据来电号码匹配工单表和通话记录表",
+          "configurable": true,
+          "defaultState": "默认开启",
+          "example": "号码 138****1234 来电时，弹屏显示近6个月的5张工单及8条通话记录"
+        },
+        {
+          "id": "FR-2",
+          "name": "录音检索",
+          "description": "支持按工单号、客户信息检索录音",
+          "priority": "high",
+          "uiLocation": "录音管理模块检索区",
+          "dataSource": "根据录音-工单绑定关系及客户主数据联合检索",
+          "configurable": true,
+          "defaultState": "默认开启",
+          "example": "输入工单号 GD20260825001 可检索到对应录音并试听"
+        },
+        {
+          "id": "FR-3",
+          "name": "录音与工单一对一绑定",
+          "description": "每条录音与工单一一绑定，归属唯一不可重复",
+          "priority": "high",
+          "uiLocation": "工单详情页关联录音区域",
+          "dataSource": "根据通话流水与工单时序自动绑定",
+          "configurable": false,
+          "defaultState": "默认开启",
+          "example": "工单 GD20260825001 通话结束后自动绑定对应录音"
+        }
+      ],
+      "dataFlows": [
+        {"from": "来电号码", "to": "弹屏", "data": "号码+关联工单+通话记录", "type": "output"}
+      ],
+      "interfaces": [],
+      "dataRequirements": ["客户主数据需含电话号码唯一索引"],
+      "nonFunctionalRequirements": ["【硬性约束】弹屏响应≤3秒"]
+    },
+    "mermaidCode": "sequenceDiagram\n  participant 用户\n  participant 系统\n  用户->>系统: 来电\n  系统->>系统: 号码匹配\n  系统-->>用户: 弹屏显示历史"
+  }
+}
