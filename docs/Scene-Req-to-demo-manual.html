@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Scene-Req-to-demo v0.0.1 — 使用手册</title>
+<title>scene-req-to-demo v0.0.1 — 使用手册</title>
 <style>
 :root{
   --bg:#f4f5f9;--surface:#fff;--border:#e4e6ef;--text:#1a1d2e;--muted:#6b7288;
@@ -117,7 +117,7 @@ td{vertical-align:top}
 
 <!-- Hero -->
 <div class="hero">
-  <h1>Scene-Req-to-demo</h1>
+  <h1>scene-req-to-demo</h1>
   <div class="subtitle">自然语言场景描述 → 结构化需求文档 + 业务系统前端原型</div>
   <div class="meta">
     <span class="badge badge-light">v1.0.0</span>
@@ -165,7 +165,7 @@ td{vertical-align:top}
 
     <table>
       <tr><th>项</th><th>内容</th></tr>
-      <tr><td>Skill 名</td><td><code class="inline-code">Scene-Req-to-demo</code></td></tr>
+      <tr><td>Skill 名</td><td><code class="inline-code">scene-req-to-demo</code></td></tr>
       <tr><td>版本</td><td>v1.0.0</td></tr>
       <tr><td>依赖</td><td>零构建依赖；纯 Markdown + HTML + JSON；8 个资产文件</td></tr>
       <tr><td>输入</td><td>自然语言场景描述（中文，任意长度；可多轮批量）</td></tr>
@@ -272,18 +272,18 @@ td{vertical-align:top}
 
     <h3 id="install-manual">手动安装</h3>
 <pre><button class="copy-btn" onclick="copyCode(this)">复制</button><code># 复制 skill 目录到主位置
-cp -r Scene-Req-to-demo ~/.agents/skills/
+cp -r scene-req-to-demo ~/.agents/skills/
 
 # 多 Agent 兼容（symlink 单源）
-ln -sf ~/.agents/skills/Scene-Req-to-demo ~/.config/opencode/skills/Scene-Req-to-demo
+ln -sf ~/.agents/skills/scene-req-to-demo ~/.config/opencode/skills/scene-req-to-demo
 mkdir -p ~/.claude/skills
-ln -sf ~/.agents/skills/Scene-Req-to-demo ~/.claude/skills/Scene-Req-to-demo</code></pre>
+ln -sf ~/.agents/skills/scene-req-to-demo ~/.claude/skills/scene-req-to-demo</code></pre>
 
     <h3 id="install-verify">验证</h3>
-<pre><button class="copy-btn" onclick="copyCode(this)">复制</button><code>ls ~/.agents/skills/Scene-Req-to-demo/SKILL.md
-ls ~/.agents/skills/Scene-Req-to-demo/assets/ | wc -l  # 应为 8
-ls -la ~/.config/opencode/skills/Scene-Req-to-demo  # symlink
-ls -la ~/.claude/skills/Scene-Req-to-demo            # symlink</code></pre>
+<pre><button class="copy-btn" onclick="copyCode(this)">复制</button><code>ls ~/.agents/skills/scene-req-to-demo/SKILL.md
+ls ~/.agents/skills/scene-req-to-demo/assets/ | wc -l  # 应为 8
+ls -la ~/.config/opencode/skills/scene-req-to-demo  # symlink
+ls -la ~/.claude/skills/scene-req-to-demo            # symlink</code></pre>
 
     <h3>资产清单</h3>
     <table>
@@ -300,9 +300,9 @@ ls -la ~/.claude/skills/Scene-Req-to-demo            # symlink</code></pre>
     </table>
 
     <h3>卸载</h3>
-<pre><button class="copy-btn" onclick="copyCode(this)">复制</button><code>rm -rf ~/.agents/skills/Scene-Req-to-demo
-rm ~/.config/opencode/skills/Scene-Req-to-demo
-rm ~/.claude/skills/Scene-Req-to-demo</code></pre>
+<pre><button class="copy-btn" onclick="copyCode(this)">复制</button><code>rm -rf ~/.agents/skills/scene-req-to-demo
+rm ~/.config/opencode/skills/scene-req-to-demo
+rm ~/.claude/skills/scene-req-to-demo</code></pre>
   </div>
 
   <!-- Usage -->
@@ -313,8 +313,8 @@ rm ~/.claude/skills/Scene-Req-to-demo</code></pre>
     <table>
       <tr><th>方式</th><th>示例</th></tr>
       <tr><td>关键词（自动）</td><td>场景描述 / 需求分析 / 帮我分析这个场景 / 我想做一个...</td></tr>
-      <tr><td>显式调用</td><td><code class="inline-code">/Scene-Req-to-demo</code> 或 <code class="inline-code">使用 Scene-Req-to-demo 分析：...</code></td></tr>
-      <tr><td>Opencode</td><td><code class="inline-code">/skill Scene-Req-to-demo</code></td></tr>
+      <tr><td>显式调用</td><td><code class="inline-code">/scene-req-to-demo</code> 或 <code class="inline-code">使用 scene-req-to-demo 分析：...</code></td></tr>
+      <tr><td>Opencode</td><td><code class="inline-code">/skill scene-req-to-demo</code></td></tr>
     </table>
 
     <h3 id="usage-single">单场景（快捷）</h3>
@@ -429,7 +429,7 @@ CBTC / TACS / ZC / VOBC / DCS / OC / MA / 移动闭塞
     <p style="font-size:13px;color:var(--muted);">这正是批量收集的价值：先多轮收集场景（每轮简版确认），合并到 6–12 条 FR 后再统一生成 Demo，信息密度才适合做 Dashboard。</p>
 
     <h3>Q: 两个 skill 吗？</h3>
-    <p style="font-size:13px;color:var(--muted);">不是。已合并为单一 skill <code class="inline-code">Scene-Req-to-demo</code>。阶段 1 的简版文本即为逐条审核，后续合并出全量文档。</p>
+    <p style="font-size:13px;color:var(--muted);">不是。已合并为单一 skill <code class="inline-code">scene-req-to-demo</code>。阶段 1 的简版文本即为逐条审核，后续合并出全量文档。</p>
 
     <h3>Q: Demo 是需求展示页还是业务系统页？</h3>
     <p style="font-size:13px;color:var(--muted);">业务系统本身的前端原型（如统计看板、工单列表、管辖地图），带模拟数据与可交互功能，不是把 FR 卡片罗列出来的需求展示页。</p>
@@ -441,14 +441,14 @@ CBTC / TACS / ZC / VOBC / DCS / OC / MA / 移动闭塞
     <p style="font-size:13px;color:var(--muted);">Vue 已内联，无需 CDN；Mermaid 图表区有源码降级。如仍空白，按 F12 查看控制台错误，或改用 <code class="inline-code">python3 -m http.server 8899</code> 后访问 <code class="inline-code">http://localhost:8899/xxx-demo.html</code>。</p>
 
     <h3>Q: 给其他 agent 迁移需要传哪些文件？</h3>
-    <p style="font-size:13px;color:var(--muted);">传整个目录 <code class="inline-code">Scene-Req-to-demo/</code>（1 主 + 8 资产，共约 70KB）。或运行 <code class="inline-code">scripts/install-skill.sh</code> 自动安装到所有兼容目录。</p>
+    <p style="font-size:13px;color:var(--muted);">传整个目录 <code class="inline-code">scene-req-to-demo/</code>（1 主 + 8 资产，共约 70KB）。或运行 <code class="inline-code">scripts/install-skill.sh</code> 自动安装到所有兼容目录。</p>
   </div>
 
 </div>
 
 <div class="footer">
-  Scene-Req-to-demo v0.0.1 · 单一 Skill · 批量收集 · 参考页感知 · MIT<br>
-  交付：<code class="inline-code">~/.agents/skills/Scene-Req-to-demo/</code>（1 主 + 8 资产）
+  scene-req-to-demo v0.0.1 · 单一 Skill · 批量收集 · 参考页感知 · MIT<br>
+  交付：<code class="inline-code">~/.agents/skills/scene-req-to-demo/</code>（1 主 + 8 资产）
 </div>
 
 <script>

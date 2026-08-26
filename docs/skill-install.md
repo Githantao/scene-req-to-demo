@@ -1,7 +1,7 @@
 # Scene Requirements Generator — 本地安装与使用说明
 
-> Skill 名称：`Scene-Req-to-demo`
-> 版本：v1.0.0 | 协议：MIT
+> Skill 名称：`scene-req-to-demo`
+> 版本：v0.0.3 | 协议：MIT
 
 ---
 
@@ -18,9 +18,9 @@
 
 | 目录 | 对应 Agent |
 |------|-----------|
-| `~/.agents/skills/Scene-Req-to-demo/` | Amp / 通用 |
-| `~/.config/opencode/skills/Scene-Req-to-demo/` | Opencode |
-| `~/.claude/skills/Scene-Req-to-demo/` | Claude Code |
+| `~/.agents/skills/scene-req-to-demo/` | Amp / 通用 |
+| `~/.config/opencode/skills/scene-req-to-demo/` | Opencode |
+| `~/.claude/skills/scene-req-to-demo/` | Claude Code |
 
 > 三处通过 symlink 指向同一份文件，更新只需改一处。
 
@@ -28,24 +28,24 @@
 
 ```bash
 # 克隆或复制 skill 目录到任意一个兼容位置
-cp -r Scene-Req-to-demo ~/.agents/skills/
+cp -r scene-req-to-demo ~/.agents/skills/
 
 # 如需多 agent 兼容，创建 symlink
-ln -s ~/.agents/skills/Scene-Req-to-demo ~/.config/opencode/skills/Scene-Req-to-demo
-ln -s ~/.agents/skills/Scene-Req-to-demo ~/.claude/skills/Scene-Req-to-demo
+ln -s ~/.agents/skills/scene-req-to-demo ~/.config/opencode/skills/scene-req-to-demo
+ln -s ~/.agents/skills/scene-req-to-demo ~/.claude/skills/scene-req-to-demo
 ```
 
 ### 1.3 验证安装
 
 ```bash
 # 检查主文件是否存在
-ls ~/.agents/skills/Scene-Req-to-demo/SKILL.md
-ls ~/.agents/skills/Scene-Req-to-demo/assets/ | wc -l
+ls ~/.agents/skills/scene-req-to-demo/SKILL.md
+ls ~/.agents/skills/scene-req-to-demo/assets/ | wc -l
 # 应输出 8（7 个资产文件 + 可能的额外文件）
 
 # 检查多位置
-ls -la ~/.config/opencode/skills/Scene-Req-to-demo  # 应为 symlink
-ls -la ~/.claude/skills/Scene-Req-to-demo            # 应为 symlink
+ls -la ~/.config/opencode/skills/scene-req-to-demo  # 应为 symlink
+ls -la ~/.claude/skills/scene-req-to-demo            # 应为 symlink
 ```
 
 ---
@@ -53,7 +53,7 @@ ls -la ~/.claude/skills/Scene-Req-to-demo            # 应为 symlink
 ## 二、目录结构
 
 ```
-Scene-Req-to-demo/
+scene-req-to-demo/
 ├── SKILL.md                              # 主文件：触发、工作流、三重输出
 └── assets/
     ├── analysis-prompt.md                 # 核心分析指令（LLM system prompt）
@@ -154,11 +154,11 @@ CBTC / TACS / ZC / VOBC / DCS / OC / MA / 移动闭塞
 
 ```bash
 # 删除主目录（symlink 会自动失效）
-rm -rf ~/.agents/skills/Scene-Req-to-demo
+rm -rf ~/.agents/skills/scene-req-to-demo
 
 # 如需彻底清理 symlink
-rm ~/.config/opencode/skills/Scene-Req-to-demo
-rm ~/.claude/skills/Scene-Req-to-demo
+rm ~/.config/opencode/skills/scene-req-to-demo
+rm ~/.claude/skills/scene-req-to-demo
 ```
 
 ---
@@ -170,7 +170,7 @@ rm ~/.claude/skills/Scene-Req-to-demo
 ./scripts/install-skill.sh
 
 # 或手动覆盖
-cp -r Scene-Req-to-demo/* ~/.agents/skills/Scene-Req-to-demo/
+cp -r scene-req-to-demo/* ~/.agents/skills/scene-req-to-demo/
 ```
 
 ---
@@ -179,7 +179,7 @@ cp -r Scene-Req-to-demo/* ~/.agents/skills/Scene-Req-to-demo/
 
 ```
 Step 1: requirements-analysis  → 诊断问题是否清晰（RA0–RA5）
-Step 2: Scene-Req-to-demo → 生成需求文档 + Demo
+Step 2: scene-req-to-demo → 生成需求文档 + Demo
 ```
 
 如果场景描述非常模糊或以解决方案开头（"我想做一个..."），建议先用 `requirements-analysis` 澄清问题，再用本 skill 生成交付物。
@@ -189,7 +189,7 @@ Step 2: Scene-Req-to-demo → 生成需求文档 + Demo
 ## 八、常见问题
 
 **Q: 为什么 agent 没有自动触发 skill？**
-A: 确保你的描述包含触发关键词（场景描述/需求分析/需求文档等）。或显式说"使用 Scene-Req-to-demo 分析这个场景"。
+A: 确保你的描述包含触发关键词（场景描述/需求分析/需求文档等）。或显式说"使用 scene-req-to-demo 分析这个场景"。
 
 **Q: 铁路领域知识没有生效？**
 A: 确保场景描述中包含领域关键词（铁路/信号/CBTC/地铁等）。通用场景不会加载领域知识，这是正常的。

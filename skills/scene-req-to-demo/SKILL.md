@@ -1,36 +1,17 @@
 ---
 name: scene-req-to-demo
-description: "Transform natural-language scene descriptions into structured requirement documents (6-section Markdown), high-fidelity interactive frontend prototypes (industrial dark-blue dashboard), and Mermaid diagrams. Supports optional railway/CBTC domain knowledge injection. Use when the user wants to turn a vague idea or oral description into reviewable, developable, testable requirement deliverables."
+description: "场景需求分析→结构化需求文档+业务系统原型。Scene description → structured requirements + interactive prototype. Trigger when user describes a system feature/module/page, or says 场景需求/需求分析/场景描述/分析以下场景/交接班/看板/填报/查询/原型生成. Uses Python scripts in assets/scripts/."
 license: MIT
-compatibility: "Claude Code (~/.claude/skills), OpenCode/Amp (~/.agents/skills), Opencode (~/.config/opencode/skills). Pure Markdown + HTML + JSON, no build step required."
+compatibility: "Claude Code (~/.claude/skills, ~/.agents/skills), OpenCode (~/.config/opencode/skills, ~/.agents/skills), Amp (~/.config/amp/skills). Requires Python 3+."
 metadata:
   author: scene-req-to-demo
-  version: "0.0.1"
+  version: "0.0.3"
   domain: requirements-engineering
-  cluster: software
-  type: generative
-  mode: assistive
 ---
 
-# Scene Requirements Generator — 场景需求生成器
+# Scene Requirements to Demo
 
-> **一句话**：自然语言场景描述 → 六段式需求文档 + 业务系统前端原型 Demo + 结构化 JSON
-
-## Purpose
-
-You transform a vague natural-language scene description into three consistent, reviewable deliverables:
-
-| # | Deliverable | Format | Audience | 内容 |
-|---|-------------|--------|----------|------|
-| 1 | 结构化需求文档 | Markdown（六段式） | 评审、归档、导入项目管理工具 | 6 段 + 5 锚点 FR + Mermaid |
-| 2 | 业务系统前端原型 | 自包含单 HTML 文件 | 业务方/甲方/开发 — 直观感受"做出来长什么样" | 按 FR 实现的真实业务界面，带模拟数据与可交互功能 |
-| 3 | 结构化数据 | JSON（含 Mermaid 代码） | 程序化消费、导入其他工具 | 完整中间产物 |
-
-> **关键区分**：Demo 是**业务系统本身的前端原型**（如：统计看板、工单列表、管辖地图），不是需求文档的展示页。每条 FR 对应 Demo 中的一个可交互功能区，`example` 字段提供模拟数据。
-
-All three are rendered from a single JSON intermediate result — the requirements drive both the document and the business system prototype.
-
----
+Natural-language scene description → JSON analysis → Markdown requirement doc + interactive business system HTML prototype.
 
 ## When to Use
 
@@ -39,207 +20,146 @@ Trigger when the user says (or implies) any of:
 - 场景描述 / 需求分析 / 需求文档 / 原型 / Demo / 帮我分析这个场景
 - 自然语言转需求 / 场景转需求 / 把这个想法整理成需求
 - "我想做一个..." / "需要一个系统..." / "能不能帮我把...整理一下"
+- "分析以下场景需求" / "交接班" / "看板" / "填报" / "查询" / 任何业务功能/模块/页面的场景描述
 - 任何包含"把一段话/一个想法变成可评审的需求"意图的请求
 
 **Do NOT trigger** when the user is asking to diagnose whether a requirement is valid (use `requirements-analysis` instead) or to write code for an already-defined requirement.
 
-### Relationship with `requirements-analysis`
+## Setup: find scripts
 
-| Skill | Role | When |
-|-------|------|------|
-| `requirements-analysis` | 诊断：问题是否清晰、约束是否明确、范围是否合理（RA0–RA5） | 前置 — 先确认"要解决什么问题" |
-| `scene-req-to-demo` (this skill) | 生成：把清晰的场景描述变成可交付的需求文档+原型 | 后置 — 再把"要做什么"落到文档和 Demo |
+Run this Bash command first to locate the scripts:
 
-If the user's description is very vague or solution-first, consider running `requirements-analysis` first to clarify the problem, then use this skill to generate deliverables.
-
----
-
-## Domain Auto-Detection
-
-Before analysis, scan the scene description for railway/signal domain keywords. If matched, load `assets/domain-railway.md` and inject its terminology and rules into the analysis prompt.
-
-**Detection keywords**:
-
-```
-铁路 / 信号 / 联锁 / 进路 / 道岔 / 闭塞 / 轨道电路 / 接近锁闭 / 敌对进路 / 故障导向安全
-CBTC / TACS / ZC / VOBC / DCS / OC / MA / 移动闭塞 / 区域控制器 / 车载控制器
-地铁 / 城轨 / 调度 / 行车 / 列控 / ATS / ATO / ATP / SIL / T2T / 信号机 / 轨道
+```bash
+SKILL_DIR=$(find ~/.agents/skills ~/.config/opencode/skills ~/.claude/skills -name "SKILL.md" -path "*/scene-req-to-demo/*" 2>/dev/null | head -1 | xargs dirname)
 ```
 
----
+## Pipeline
 
-## Workflow — Iterative Batch + Reference-Aware (4 Phases)
+### Step 1 — Generate JSON
 
-```
-Phase 1 — Iterative Requirement Collection (repeatable)
-  │
-  │  Scene 1 → Domain Detection → Background Analysis → Structured Analysis → Text requirement (简版：需求名称+总体需求+功能需求，便于人工审核)
-  │  Scene 2 → ...same...
-  │  Scene N → ...same...
-  │  Each scene produces 1 mainRequirement + 2–6 FRs (5 anchors each)
-  │  Per-scene output format (text, no file):
-  │    【需求名称】{title}
-  │    【总体需求】{mainRequirement.name}：{description}
-  │    【功能需求】FR-1..N（每条：名称+描述+5锚点压缩为一行）
-  │  After each scene, ask: "是否还有需求？"
-  │    有 → next scene
-  │    无 → Phase 2
-  │  Note: 全量的 6 段（业务背景/接口/数据/NFR 等）仅在 Phase 4 的 Markdown 中完整呈现
-  │
-  ▼
-Phase 2 — Reference Page Check
-  │  Ask: "是否有基础页面或参考页面？"
-  │  Input options:
-  │    - Screenshot (PNG/JPG) — extract layout, colors, component style
-  │    - HTML file — extract structure, styles, component patterns
-  │    - Text description — "现有XX系统的XX页面"
-  │  Result:
-  │    有 → Mode A: Overlay (add new FR zones onto existing layout) or
-  │           Mode B: Style Copy (replicate reference page's visual language)
-  │    无 → Mode C: Fresh (generate from scratch, default dark-blue industrial)
-  │
-  ▼
-Phase 3 — Merge & Verify
-  │  Merge all collected FRs: deduplicate, reassign IDs (FR-1..N), check priority balance
-  │  Merge businessContext: combine proposers/stakeholders, unify problem statement
-  │  Diagram generation per assets/mermaid-rules.md (one diagram covering merged scope)
-  │  Quality verification per assets/verification-checklist.md:
-  │    □ 5-anchor completeness per FR
-  │    □ 6-section completeness (empty sections marked "无")
-  │    □ Hallucination / omission / over-decomposition / logic consistency
-  │    □ Batch deduplication (no overlapping FRs)
-  │    □ Demo readiness (merged FRs ≥ 3, ideally 6–12 for a full dashboard)
-  │
-  ▼
-Phase 4 — Triple Output (from merged result)
-  │
-  ├─→ Markdown 6-section requirement document (assets/output-template.md) — merged
-  ├─→ Business System Demo HTML — single self-contained file
-  │     Mode A: Overlay on base page layout + new feature zones
-  │     Mode B: Reference style + all feature zones
-  │     Mode C: Fresh dashboard per assets/prototype-template.md + prototype-styles.md
-  └─→ Structured JSON (embedded in Markdown code block, for programmatic use)
-```
-
-### Single-Scene Shortcut
-
-For a single scene that already has sufficient scope (≥ 3 FRs), Phases 1–2 can be done in one turn — collect the scene, optionally ask about reference page, then directly proceed to Phases 3–4.
-
----
-
-## Output Contract
-
-### JSON Intermediate Schema
-
-The analysis in Step 3 must produce JSON conforming to this schema. This JSON is the single source of truth for all three outputs.
+Create `./output/<需求名称>.json` with this structure. Each FR requires 5 anchors: `uiLocation`, `dataSource`, `configurable` (bool), `defaultState`, `example`.
 
 ```json
 {
-  "businessContext": {
-    "proposer": "string — 提出方",
-    "problemLevel": "string — 问题层级（工班/车间/段/部/职能）",
-    "currentState": "string — 现状痛点",
-    "targetLevel": "string — 解决层级（信息化/自动化/智能化）",
-    "expectedBenefit": "string — 预期成效（降成本/降人力/提效率/提质量，至少1项可量化）"
-  },
-  "requirements": {
-    "title": "string — 系统名称（即业务系统名称，如：智能浏览统计看板）",
-    "diagramType": "flowchart | sequenceDiagram | classDiagram | stateDiagram-v2 | erDiagram | requirementDiagram",
-    "layers": {
-      "business": { "goal": "业务目标", "value": "业务价值" },
-      "user": { "scenario": "用户场景", "painPoints": ["痛点"] },
-      "system": { "summary": "系统职责" }
+  "scene": "<user text>",
+  "analysis": {
+    "businessContext": {"proposer": "...", "problemLevel": "...", "currentState": "...", "targetLevel": "...", "expectedBenefit": "..."},
+    "requirements": {
+      "title": "...",
+      "diagramType": "flowchart|sequenceDiagram|stateDiagram-v2|classDiagram|erDiagram",
+      "layers": {"business": {"goal": "...", "value": "..."}, "user": {"scenario": "...", "painPoints": ["..."]}, "system": {"summary": "..."}},
+      "mainRequirement": {"name": "...", "description": "..."},
+      "systemBoundary": "...",
+      "stakeholders": ["..."],
+      "functionalRequirements": [
+        {"id": "FR-1", "name": "...", "description": "...", "priority": "high|medium|low", "uiLocation": "...", "dataSource": "...", "configurable": true, "defaultState": "...", "example": "..."}
+      ],
+      "dataFlows": [{"from":"...", "to":"...", "data":"...", "type":"input|output|storage"}],
+      "interfaces": [],
+      "dataRequirements": [],
+      "nonFunctionalRequirements": []
     },
-    "mainRequirement": { "name": "总体需求名称", "description": "概括描述" },
-    "systemBoundary": "string — 系统边界",
-    "stakeholders": ["干系人"],
-    "functionalRequirements": [
-      {
-        "id": "FR-1",
-        "name": "功能名称",
-        "description": "可测试的描述",
-        "priority": "high | medium | low",
-        "uiLocation": "页面/模块位置（映射到 Demo 的功能区）",
-        "dataSource": "数据来源/触发条件",
-        "configurable": true,
-        "defaultState": "默认开启 | 默认关闭",
-        "example": "具体场景举例（映射到 Demo 的模拟数据）"
-      }
-    ],
-    "dataFlows": [
-      { "from": "来源", "to": "目标", "data": "数据", "type": "input | output | storage" }
-    ],
-    "interfaces": ["接口需求，无则为空数组"],
-    "dataRequirements": ["数据需求，无则为空数组"],
-    "nonFunctionalRequirements": ["非功能约束，标注硬性约束 vs 假设"]
-  },
-  "mermaidCode": "string — Mermaid diagram code（流程/时序/状态等，随 Markdown 文档交付）"
+    "mermaidCode": "flowchart TD\n  A --> B"
+  }
 }
 ```
 
-**Constraints**:
+### Step 2 — Validate
 
-- `businessContext` — all 5 fields required, no omission
-- `mainRequirement` — exactly 1
-- `functionalRequirements` — 2–6 items, each with all 5 anchors + `priority`
-- `diagramType` — must be one of the 6 enum values
-- `interfaces` / `dataRequirements` — must be present even if empty (mark "无" in Markdown)
-- All descriptions in Chinese
-- JSON must be strictly valid
+```bash
+mkdir -p ./output
+python3 $SKILL_DIR/assets/scripts/analyze.py < ./output/<需求名称>.json
+```
 
-### Markdown Output
+If `status` is `needs_correction`, fix the JSON and re-run.
 
-Render per `assets/output-template.md` — 6 sections + Mermaid code block. This is the **requirements document** for review and downstream handoff.
+### Step 3 — Batch confirmation ⚠️ MUST ASK
 
-### Demo HTML Output — Business System Frontend Prototype
+> ⛔ STOP — 你必须在此停下，向用户提问，未获答复前不得继续。
 
-Render per `assets/prototype-template.md` + `assets/prototype-styles.md`:
+向用户展示当前场景的确认信息：需求名称 + 总体需求 + 功能需求列表。
 
-- Single self-contained HTML file, Vue inlined (~160KB) for `file://` compatibility
-- **This is the business system itself** — e.g., a monitoring dashboard, work order list, or jurisdiction map — not a requirements viewer
-- Each FR maps to an interactive feature zone in the Demo; `example` field provides mock data
-- Reference-aware: if a base/reference page was provided in Phase 2, Demo overlays new features onto it or replicates its visual style; otherwise uses default dark-blue industrial theme
-- Interactions: filter/search, tab switching, drill-down, data visualization — as the real system would behave
-- Mock data derived from FR `example` fields; no backend required
-- Zero build step — double-click to open in Chrome
+然后**必须提问**：
 
----
+> "是否还有其他需求场景需要补充？如有请直接描述，无则回复「没有」或「继续」。"
 
-## LLM Backend — Backend-Agnostic
+- **用户有补充** → 回到 Step 1 为新场景生成 JSON，重复 Step 2-3，直至用户说没有
+- **用户说没有/继续** → 将所有已收集场景合并（去重 FR、重编号 ID）为 `./output/merged.json`；**仅一个场景时直接复制** `./output/<需求名称>.json` → `./output/merged.json`
 
-This skill defines **what** to generate (prompt + schema + templates), not **how** to call an LLM. The agent should use whatever LLM is available:
+```bash
+# 仅一个场景时：
+cp ./output/<需求名称>.json ./output/merged.json
+```
 
-| Backend | How to use this skill's prompt |
-|---------|-------------------------------|
-| Claude API | Send `assets/analysis-prompt.md` as system prompt + scene as user message |
-| OpenAI API | Same — system + user messages, `temperature: 0.2, max_tokens: 4096` |
-| Ollama (local) | Same, via `http://localhost:11434/v1/chat/completions` |
-| Any OpenAI-compatible (WebLLM / Ollama / LM Studio) | Same, via `chat.completions.create()` |
+⚠️ 无论单场景还是多场景，都必须执行本步（提问 + 生成 merged.json）。禁止跳过。
 
-The skill does NOT bundle or require any specific LLM SDK. See `assets/analysis-prompt.md` for the full prompt text.
+### Step 4 — Reference page ⚠️ MUST ASK
 
-**Stability**: All API calls should include `seed: 42` where supported, `temperature: 0.2` for deterministic structured output.
+> ⛔ STOP — 你必须在此停下，向用户提问，未获答复前不得继续。
 
----
+**必须提问**：
 
-## Assets Index
+> "是否有基础页面/参考页面（截图/HTML/文字描述）可供参考？如有请提供，无则回复「没有」或「跳过」。"
 
-| Asset | Purpose |
-|-------|---------|
-| `assets/analysis-prompt.md` | Core analysis prompt — rules, schema, FR granularity, RaR/CoVe |
-| `assets/domain-railway.md` | Railway/signal domain — glossary, interlocking + CBTC/TACS rules |
-| `assets/mermaid-rules.md` | Diagram type selection + generation rules (6 types) |
-| `assets/output-template.md` | Markdown 6-section template + field mapping |
-| `assets/requirement-writing-guide.md` | Requirement writing guide — 5 anchors, 6 sections, testability |
-| `assets/prototype-template.md` | Demo HTML structure + component spec + build steps |
-| `assets/prototype-styles.md` | Industrial dark-blue design tokens + component styles |
-| `assets/verification-checklist.md` | Quality checklist — CoVe + anchor + section completeness |
+- **有参考** → 提取样式特征，生成 `./output/ref-styles.css`（覆盖 `:root` 变量，参考 `assets/prototype-styles-tokens.md` 变量名）
+- **无参考** → 使用默认暗蓝工业风，无需额外操作
 
----
+⚠️ 本步必须提问，禁止跳过。即使无参考页面也需用户明确确认。
 
-## References
+### Step 5 — Validate merged
 
-- Word template paradigm: 6-section document (`报警新增功能.docx`) + 11-chapter functional panorama (`需求描述示例V1.doc`)
-- Frontend design language: CASCO 12×24 grid, dark-blue industrial dashboard (3 screenshots + 2 HTML references)
-- Prompt engineering: RaR (Rephrase and Respond) + CoVe (Chain-of-Verification) + seed stability
-- Existing skills: `requirements-analysis` (diagnostic) + `mermaid-diagrams` (syntax) + `frontend-design` / `baoyu-design` (aesthetics)
+```bash
+python3 $SKILL_DIR/assets/scripts/validate-anchors.py < ./output/merged.json
+```
+
+### Step 6 — Render (双轨 Demo)
+
+#### 6a — Markdown + 约束版 Demo（脚本生成）
+
+```bash
+python3 $SKILL_DIR/assets/scripts/render-markdown.py --output-dir ./output < ./output/merged.json
+python3 $SKILL_DIR/assets/scripts/render-demo.py --output-dir ./output < ./output/merged.json
+```
+
+约束版特点：单一页面承载所有 FR，按 `analyze_fr_roles` 自动布局（中央视图区 + 工具栏 + 侧边栏），暗蓝工业风，FR 协作关系体现在界面结构中。
+
+> 如 Step 4 有参考页面 CSS：追加 `--css-file ./output/ref-styles.css` 参数覆盖默认主题。
+
+#### 6b — 创意版 Demo（LLM 自由生成）
+
+约束版生成后，LLM 再生成一个创意版 `./output/<标题>-creative.html`：
+
+1. **检索同类参考**：根据 `title` 和 FR 关键词，联想 2-3 个同类业务系统的典型界面模式（如"综合看板"可参考 Grafana/电力调度大屏/铁路 CTC 界面）
+2. **自由设计**：不受 `prototype-template-detail.md` 布局约束，可自选以下维度做差异化：
+   - 布局：分栏/全屏/卡片网格/仪表盘拼贴
+   - 视觉：配色、卡片形态、数据可视化选型
+   - 交互：筛选联动、钻取、悬浮详情、时间轴
+3. **约束**：
+   - 必须是**业务系统界面**，不是需求分析展示
+   - 必须覆盖所有 FR 的业务能力（`example` 字段提供模拟数据）
+   - 必须可交互（Vue 响应式，参考 `vendor/vue.global.prod.js` 内联方式）
+   - 自包含单 HTML 文件，可 `file://` 直接打开
+4. **保存**：`./output/<标题>-creative.html`
+
+两个版本供用户对比，启发设计讨论。
+
+Output path and filename are controlled by the scripts — agent cannot偏离。
+
+### Step 7 — Done
+
+The scripts print the actual output paths. Tell user.
+
+## Diagram type rules
+
+- Multi-party interaction / API / messaging → `sequenceDiagram`
+- State flow / approval / lifecycle → `stateDiagram-v2`
+- Data entities / table structure → `erDiagram`
+- Class / module / interface → `classDiagram`
+- Step-by-step process → `flowchart`
+
+## Mermaid rules
+
+- Fixed node naming: `[verbNoun]`
+- Flow order: input → process → decision → output
+- Subgraphs grouped by phase (input/process/output)
+- Max 3 branches per decision diamond

@@ -3,3 +3,18 @@ dist/
 .DS_Store
 *.local
 .gstack/
+
+# skill 产物
+output/
+
+# 调试/截图产物
+.playwright-mcp/
+*.png
+*.log
+headroom_memory.db
+app-dom.html
+case-study-project-Opencode/
+__pycache__/
+*.pyc
+step2-initial
+step2-preview

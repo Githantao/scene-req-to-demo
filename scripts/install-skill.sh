@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# install-skill.sh — Install Scene-Req-to-demo to all compatible agent directories
+# install-skill.sh — Install scene-req-to-demo to all compatible agent directories
 # Usage: ./scripts/install-skill.sh [--source DIR] [--force]
 #   --source DIR  Custom source directory (default: auto-detect)
 #   --force       Overwrite existing installations
@@ -9,7 +9,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-SKILL_NAME="Scene-Req-to-demo"
+SKILL_NAME="scene-req-to-demo"
 SOURCE=""
 FORCE=false
 
