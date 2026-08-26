@@ -53,21 +53,89 @@ import re
 from pathlib import Path
 
 
-# Domain keywords for railway/CBTC detection (lightweight — full glossary in domain-railway.md)
-DOMAIN_KEYWORDS = [
-    "铁路", "信号", "联锁", "进路", "道岔", "闭塞", "轨道电路",
-    "CBTC", "TACS", "ZC", "VOBC", "DCS", "OC", "MA", "移动闭塞",
-    "地铁", "城轨", "调度", "行车", "列控", "SIL", "T2T", "信号机", "轨旁",
+# Subsystem keyword groups (lightweight routing — full glossary in domain-railway.md).
+# safety = 安全苛求系统（联锁/列控/防护，无操作前端）
+# ats/ctc/monitoring/iom = 非安全子系统（各有真实前端与传统界面范式）
+SUBSYSTEM_KEYWORDS = {
+    "safety": [
+        "联锁", "进路", "道岔", "闭塞", "轨道电路", "计轴", "信号机", "信号开放",
+        "CBTC", "TACS", "ZC", "VOBC", "ATP", "移动闭塞", "MA", "移动授权", "防护包络",
+        "SIL", "故障导向安全", "故障-安全", "接近锁闭", "敌对进路", "列控", "超速防护",
+        "应答器", "安全完整性", "联锁表", "区段占用", "解锁", "锁闭",
+    ],
+    "ats": [
+        "ATS", "列车自动监控", "自动监控", "行车指挥", "调度员", "运行图", "时刻表",
+        "车次号", "进路自动", "自动排路", "列车跟踪", "站场图", "运行线", "实际图",
+        "计划运行图", "调度大屏", "行车调度", "调整", "扣车", "跳停",
+    ],
+    "ctc": [
+        "CTC", "调度集中", "TDCS", "调度监督", "调度指挥", "集中控制", "遥控",
+        "调度命令", "车站子系统", "调度所", "远动", "车次号跟踪", "记点",
+    ],
+    "monitoring": [
+        "MSS", "集中监测", "微机监测", "监测子系统", "维护支持", "监测系统", "监测终端",
+        "转辙机电流", "动作电流", "轨道电压", "灯丝", "电缆绝缘", "波形回放", "曲线",
+        "报警", "告警", "设备监测", "状态监测", "模拟量", "开关量", "回放",
+    ],
+    "iom": [
+        "IOM", "智能运维", "综合运维", "运维管理", "设备台账", "检修", "维修", "工单",
+        "巡检", "检修计划", "备件", "库存", "健康评价", "健康管理", "PHM", "故障预测",
+        "MTBF", "MTTR", "维修工单", "生产管理系统", "卡控", "登销记", "运统",
+    ],
+}
+
+# General railway/urban-rail context words (used to raise confidence & decide domain load)
+RAILWAY_CONTEXT = [
+    "铁路", "信号", "地铁", "城轨", "轨道交通", "行车", "轨旁", "车站", "车辆段",
+    "线路", "列车", "机车", "区间", "站场", "运营", "调度",
 ]
 
 
-def detect_domain(scene: str) -> dict:
-    """Detect if scene contains railway/signal domain keywords."""
-    hits = [kw for kw in DOMAIN_KEYWORDS if kw in scene]
+def detect_subsystem(scene: str) -> dict:
+    """Classify scene into a subsystem group for rule/Demo-layout routing."""
+    matched = {}
+    for sub, kws in SUBSYSTEM_KEYWORDS.items():
+        hits = [kw for kw in kws if kw in scene]
+        if hits:
+            matched[sub] = hits
+
+    if not matched:
+        subsystem, confidence = "general", "none"
+    else:
+        # pick group with most keyword hits; tie → first in defined order (safety first)
+        subsystem = max(matched, key=lambda s: len(matched[s]))
+        best_count = len(matched[subsystem])
+        ctx_hits = [kw for kw in RAILWAY_CONTEXT if kw in scene]
+        confidence = "high" if (best_count >= 2 or ctx_hits) else "medium"
+
+    ctx_hits = [kw for kw in RAILWAY_CONTEXT if kw in scene]
     return {
-        "matched": bool(hits),
-        "keywords": hits,
-        "needs_domain_rul": len(hits) > 0,
+        "subsystem": subsystem,
+        "matched_keywords": matched.get(subsystem, []),
+        "all_matches": matched,
+        "railway_context": ctx_hits,
+        "confidence": confidence,
+    }
+
+
+def detect_domain(scene: str) -> dict:
+    """Detect railway/signal domain + subsystem. Backward-compatible fields preserved."""
+    sub = detect_subsystem(scene)
+    all_kw = []
+    for v in sub["all_matches"].values():
+        all_kw.extend(v)
+    all_kw.extend(sub["railway_context"])
+    # dedupe, preserve order
+    seen = set()
+    keywords = [k for k in all_kw if not (k in seen or seen.add(k))]
+    matched = bool(keywords)
+    return {
+        "matched": matched,
+        "keywords": keywords,
+        "needs_domain_rul": matched,
+        "subsystem": sub["subsystem"],
+        "subsystem_confidence": sub["confidence"],
+        "railway_context": sub["railway_context"],
     }
 
 

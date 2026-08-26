@@ -31,14 +31,17 @@
 ### Pipeline
 
 ```
-场景描述 → JSON 分析(含 5 锚点 FR) → 批量确认 → 参考页面(可选) → 校验 → 双轨 Demo
-                                                                    ├─ 约束版(脚本生成)
-                                                                    └─ 创意版(LLM 自由生成)
+场景描述 → JSON 分析(5 锚点 + 安全标注) → 子系统检测 → 批量确认 → 参考页面(可选) → 校验 → 双轨 Demo
+                                                                                    ├─ 约束版(脚本生成)
+                                                                                    └─ 创意版(骨架+灵感, build-creative 组装)
 ```
 
-- 每条 FR 含 5 锚点：`uiLocation` / `dataSource` / `configurable` / `defaultState` / `example`
-- 双轨 Demo：约束版（统一布局，FR 协作）+ 创意版（检索同类系统自由设计），对比启发设计讨论
+- 每条 FR 含 5 锚点（`uiLocation`/`dataSource`/`configurable`/`defaultState`/`example`）+ `safetyRelevance` + `acceptanceCriteria`
+- **子系统识别**：`analyze.py` 判定 `safety/ats/ctc/monitoring/iom/general`，驱动领域规则与 Demo 布局
+- **安全标记**：安全苛求功能自动在 Demo 注入"安全功能阐述图"横幅、Markdown 注入安全声明（安全系统无操作前端）
+- 双轨 Demo：约束版（统一布局，评审用）+ 创意版（子系统界面骨架 + 信息化技术灵感，启发用）
 - 单页面承载所有 FR（非每 FR 一 Tab）；Tab 仅用于视图切换（如管辖图↔数据分析图）
+- **GAP 纪律**：量化指标无依据必须标 `[假设]/[GAP]`，防编造
 
 ### 安装
 
@@ -61,9 +64,9 @@
 
 | 产物 | 路径 | 说明 |
 |------|------|------|
-| Markdown 需求文档 | `./output/<标题>.md` | 六段式结构化需求 |
-| 约束版 Demo | `./output/<标题>.html` | 脚本生成，暗蓝工业风，单文件可 `file://` 打开 |
-| 创意版 Demo | `./output/<标题>-creative.html` | LLM 自由生成，双轨对比 |
+| Markdown 需求文档 | `./output/<标题>.md` | 六段式；安全场景自动加安全声明 |
+| 约束版 Demo | `./output/<标题>.html` | 脚本生成，暗蓝工业风；安全场景自动加阐述横幅 |
+| 创意版 Demo | `./output/<标题>-creative.html` | 非安全子系统；子系统骨架+技术灵感，build-creative 组装+冒烟 |
 | 结构化 JSON | `./output/<标题>.json` + `merged.json` | 含 Mermaid 代码，可编程消费 |
 
 ---
@@ -115,6 +118,7 @@ npm run build      # 构建到 dist/
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.0.4 | 2026-08-26 | 子系统识别 / 安全标记自动注入 / build-creative 冒烟 / FR 扩展字段 / GAP 纪律 / 领域拆分安全篇+非安全篇 / 创意版灵感库 |
 | v0.0.3 | 2026-08-26 | Skill 双轨 Demo / MUST ASK 流程 / 铁路领域知识 / 业务系统原型重构 |
 | v0.0.1 | 2026-06-04 | Skill 初版：场景→需求→Demo 基础链路 |
 | v2.x | 2026-06 | analyzer.html 多图表类型 / 铁路信号增强 / 布局优化 |

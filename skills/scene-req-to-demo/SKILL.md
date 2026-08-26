@@ -5,13 +5,13 @@ license: MIT
 compatibility: "Claude Code (~/.claude/skills, ~/.agents/skills), OpenCode (~/.config/opencode/skills, ~/.agents/skills), Amp (~/.config/amp/skills). Requires Python 3+."
 metadata:
   author: scene-req-to-demo
-  version: "0.0.3"
+  version: "0.0.4"
   domain: requirements-engineering
 ---
 
 # Scene Requirements to Demo
 
-Natural-language scene description → JSON analysis → Markdown requirement doc + interactive business system HTML prototype.
+Natural-language scene description → JSON analysis → Markdown requirement doc + interactive business system HTML prototype (双轨: 约束版 + 创意版).
 
 ## When to Use
 
@@ -33,11 +33,33 @@ Run this Bash command first to locate the scripts:
 SKILL_DIR=$(find ~/.agents/skills ~/.config/opencode/skills ~/.claude/skills -name "SKILL.md" -path "*/scene-req-to-demo/*" 2>/dev/null | head -1 | xargs dirname)
 ```
 
+## ⭐ Read first: `assets/scripts/README.md`
+
+动手前必读 `$SKILL_DIR/assets/scripts/README.md` — 4 个脚本的 stdin/stdout 契约、JSON schema 单一事实源、各阶段自检清单。**只读它即可正确调用全部脚本，无需打开脚本源码。**
+
+## Asset Loading Strategy — 上下文优化
+
+为适配本地模型 256K 上下文，按阶段**惰性加载**资产，勿一次性全读：
+
+| 阶段 | 需加载 | 增量 | 累计 |
+|------|--------|------|------|
+| 契约 | `SKILL.md` + `scripts/README.md` | ~13 KB | ~13 KB |
+| Phase 1（生成 JSON） | + `analysis-prompt.md` + `requirement-writing-guide.md` + `scripts/examples/sample.json` | ~18 KB | ~31 KB |
+| Phase 3（校验合并） | + `verification-checklist.md` | ~6 KB | ~37 KB |
+| Phase 4（渲染） | + `prototype-template.md` + `prototype-styles-tokens.md` | ~7 KB | ~44 KB |
+| Phase 4b（创意版） | + `prototype-template-detail.md` + `prototype-styles-css.md` + `prototype-domain-ui.md` + `prototype-tech-inspiration.md` | ~33 KB | ~77 KB |
+| 条件：铁路领域 | + `domain-railway.md`（`domain_info.matched=true` 时，按 `subsystem` 选章节） | ~7 KB | +7 KB |
+| 条件：图表生成 | + `mermaid-rules.md` | ~6 KB | +6 KB |
+
+**原则**：`output-template.md` 与样式细节已内嵌于 `render-*.py`，仅在脚本不可用或需手工微调时作为 fallback 读取；Phase 1-3 勿加载 Phase 4b 的大文件。
+
 ## Pipeline
 
 ### Step 1 — Generate JSON
 
-Create `./output/<需求名称>.json` with this structure. Each FR requires 5 anchors: `uiLocation`, `dataSource`, `configurable` (bool), `defaultState`, `example`.
+用 `assets/analysis-prompt.md` 作为分析指引、`assets/requirement-writing-guide.md` 作为 FR 表述规范，参考 `assets/scripts/examples/sample.json`。创建 `./output/<需求名称>.json`。
+
+每条 FR 必须有 5 锚点：`uiLocation`、`dataSource`、`configurable`(bool)、`defaultState`、`example`；并标注 `safetyRelevance`（安全相关/非安全相关）与 `acceptanceCriteria`（可测试验收准则）。
 
 ```json
 {
@@ -52,7 +74,7 @@ Create `./output/<需求名称>.json` with this structure. Each FR requires 5 an
       "systemBoundary": "...",
       "stakeholders": ["..."],
       "functionalRequirements": [
-        {"id": "FR-1", "name": "...", "description": "...", "priority": "high|medium|low", "uiLocation": "...", "dataSource": "...", "configurable": true, "defaultState": "...", "example": "..."}
+        {"id": "FR-1", "name": "...", "description": "...", "priority": "high|medium|low", "safetyRelevance": "安全相关|非安全相关", "acceptanceCriteria": "...", "uiLocation": "...", "dataSource": "...", "configurable": true, "defaultState": "...", "example": "..."}
       ],
       "dataFlows": [{"from":"...", "to":"...", "data":"...", "type":"input|output|storage"}],
       "interfaces": [],
@@ -64,14 +86,18 @@ Create `./output/<需求名称>.json` with this structure. Each FR requires 5 an
 }
 ```
 
-### Step 2 — Validate
+**GAP 纪律（防编造）**：量化指标（响应时间/准确率/可用性等）无标准依据时，必须标 `[假设]` 或 `[GAP]`，禁止凭空给出确定数值。安全系统相关遵循 `domain-railway.md` 铁律。
+
+### Step 2 — Validate（领域/子系统检测）
 
 ```bash
 mkdir -p ./output
 python3 $SKILL_DIR/assets/scripts/analyze.py < ./output/<需求名称>.json
 ```
 
-If `status` is `needs_correction`, fix the JSON and re-run.
+- `status=needs_correction` → 修复 JSON 重跑。
+- `domain_info.matched=true` → 加载 `assets/domain-railway.md`，按 `domain_info.subsystem` 选章节（safety / ats / ctc / monitoring / iom）。
+- 记住 `domain_info.subsystem` — 它驱动 Step 6 的安全标记与布局选择。
 
 ### Step 3 — Batch confirmation ⚠️ MUST ASK
 
@@ -106,11 +132,15 @@ cp ./output/<需求名称>.json ./output/merged.json
 
 ⚠️ 本步必须提问，禁止跳过。即使无参考页面也需用户明确确认。
 
-### Step 5 — Validate merged
+### Step 5 — Validate merged（含质量检查清单）
+
+对照 `assets/verification-checklist.md` 自检后运行：
 
 ```bash
 python3 $SKILL_DIR/assets/scripts/validate-anchors.py < ./output/merged.json
 ```
+
+关注新增检查：`safety_and_acceptance`（安全标注+验收准则）、`configurable_distribution`（configurable 防摆设）、`gap_discipline`（量化指标防编造）。修复所有 `errors`，`warnings` 逐条确认。
 
 ### Step 6 — Render (双轨 Demo)
 
@@ -121,27 +151,31 @@ python3 $SKILL_DIR/assets/scripts/render-markdown.py --output-dir ./output < ./o
 python3 $SKILL_DIR/assets/scripts/render-demo.py --output-dir ./output < ./output/merged.json
 ```
 
-约束版特点：单一页面承载所有 FR，按 `analyze_fr_roles` 自动布局（中央视图区 + 工具栏 + 侧边栏），暗蓝工业风，FR 协作关系体现在界面结构中。
+- 约束版：单页面承载所有 FR，按 FR 角色自动布局（中央视图区+工具栏+侧边栏），暗蓝工业风。
+- **安全标记自动注入**：检测到安全苛求功能时，脚本自动在 Demo 顶部加"安全功能阐述图·实际安全系统无操作前端界面"横幅+角标，并在 Markdown 加安全声明。无需手动处理。
+- 如 Step 4 有参考 CSS：追加 `--css-file ./output/ref-styles.css`。
 
-> 如 Step 4 有参考页面 CSS：追加 `--css-file ./output/ref-styles.css` 参数覆盖默认主题。
+#### 6b — 创意版 Demo（仅非安全子系统）
 
-#### 6b — 创意版 Demo（LLM 自由生成）
+> ⚠️ `subsystem=safety` 时**跳过创意版**（安全系统无前端，只有约束版+阐述横幅）。
 
-约束版生成后，LLM 再生成一个创意版 `./output/<标题>-creative.html`：
+对 ats / ctc / monitoring / iom / general，生成 `./output/<标题>-creative.html`：
 
-1. **检索同类参考**：根据 `title` 和 FR 关键词，联想 2-3 个同类业务系统的典型界面模式（如"综合看板"可参考 Grafana/电力调度大屏/铁路 CTC 界面）
-2. **自由设计**：不受 `prototype-template-detail.md` 布局约束，可自选以下维度做差异化：
-   - 布局：分栏/全屏/卡片网格/仪表盘拼贴
-   - 视觉：配色、卡片形态、数据可视化选型
-   - 交互：筛选联动、钻取、悬浮详情、时间轴
+1. **专业下限**：按 `assets/prototype-domain-ui.md` 取对应子系统的界面骨架（布局/配色惯例）
+2. **技术灵感**：从 `assets/prototype-tech-inspiration.md` 挑 2-3 个契合的信息化趋势模式叠加（大屏/实时流/数字孪生/钻取/AI/可配置）
 3. **约束**：
    - 必须是**业务系统界面**，不是需求分析展示
-   - 必须覆盖所有 FR 的业务能力（`example` 字段提供模拟数据）
-   - 必须可交互（Vue 响应式，参考 `vendor/vue.global.prod.js` 内联方式）
-   - 自包含单 HTML 文件，可 `file://` 直接打开
-4. **保存**：`./output/<标题>-creative.html`
+   - 覆盖所有 FR 业务能力（`example` 字段提供模拟数据）
+   - 遵守 `prototype-tech-inspiration.md` 的可行性约束（无构建、需网络要标注+降级）
+4. **组装（勿手写 Vue 内联）**：LLM 写带 `<!--__INJECT_VUE__-->` 占位符的 HTML 存为 `./output/<标题>-creative.tpl.html`，再交给脚本注入 Vue 并自动冒烟测试：
+   ```bash
+   python3 $SKILL_DIR/assets/scripts/build-creative.py \
+     --input ./output/<标题>-creative.tpl.html \
+     --output ./output/<标题>-creative.html
+   ```
+   冒烟测试（`node --check`）失败会报错且不产出文件——修复内联 JS 后重跑，**禁止静默出货**。
 
-两个版本供用户对比，启发设计讨论。
+约束版（专业下限）+ 创意版（技术上限）供对比，启发设计讨论。
 
 Output path and filename are controlled by the scripts — agent cannot偏离。
 

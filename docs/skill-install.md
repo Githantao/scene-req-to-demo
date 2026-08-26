@@ -1,7 +1,9 @@
 # Scene Requirements Generator — 本地安装与使用说明
 
 > Skill 名称：`scene-req-to-demo`
-> 版本：v0.0.3 | 协议：MIT
+> 版本：v0.0.4 | 协议：MIT
+
+> **v0.0.4 要点**：① 子系统识别（safety/ats/ctc/monitoring/iom/general）；② 安全苛求功能自动注入"安全功能阐述图"横幅/声明（安全系统无操作前端）；③ 双轨 Demo——约束版（脚本统一布局）+ 创意版（`build-creative.py` 组装并 `node --check` 冒烟）；④ FR 扩展字段 `safetyRelevance`/`acceptanceCriteria`；⑤ GAP 纪律（量化指标无依据标 `[假设]/[GAP]`）。详见 `skills/scene-req-to-demo/SKILL.md`。
 
 ---
 
@@ -89,9 +91,10 @@ scene-req-to-demo/
 
 | 输入 | 输出 |
 |------|------|
-| 一段自然语言场景描述（中文，任意长度） | ① Markdown 六段式需求文档 |
-| | ② 可交互 Demo HTML（暗蓝工业风，单文件） |
-| | ③ 结构化 JSON（含 Mermaid 代码） |
+| 一段自然语言场景描述（中文，任意长度） | ① Markdown 六段式需求文档（安全场景自动加安全声明） |
+| | ② 约束版 Demo HTML（脚本统一布局，暗蓝工业风；安全场景自动加阐述横幅） |
+| | ③ 创意版 Demo HTML（非安全子系统；子系统骨架+技术灵感，build-creative 组装+冒烟） |
+| | ④ 结构化 JSON（含 Mermaid 代码） |
 
 ### 3.3 领域自动检测
 

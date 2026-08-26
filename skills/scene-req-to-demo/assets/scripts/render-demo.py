@@ -93,7 +93,42 @@ body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,
 .proto-list-item:last-child { border-bottom:none; }
 .proto-status-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
 .proto-footer { text-align:center; padding:16px; font-size:11px; color:var(--text-muted); border-top:1px solid var(--border); margin-top:16px; }
+.safety-banner { display:flex; align-items:center; gap:10px; padding:8px 20px; background:rgba(255,149,0,0.12); border-bottom:1px solid var(--status-orange); color:var(--status-orange); font-size:12px; font-weight:600; position:sticky; top:0; z-index:200; }
+.safety-banner .icon { font-size:16px; }
+.safety-banner .sub { font-weight:400; color:var(--text-secondary); font-size:11px; }
+.safety-corner { position:fixed; right:12px; bottom:12px; background:var(--status-orange); color:#001a2e; font-size:10px; font-weight:700; padding:4px 10px; border-radius:6px; z-index:300; opacity:0.92; }
 """
+
+
+SAFETY_HINTS = [
+    "联锁", "进路", "道岔", "闭塞", "防护", "故障导向安全", "故障-安全", "SIL",
+    "移动授权", "防护包络", "ATP", "ZC", "VOBC", "安全相关", "接近锁闭", "敌对进路",
+]
+
+
+def _avoid_collision(out_path: Path) -> Path:
+    """If target exists, append -2, -3, ... to avoid overwriting (P1-8)."""
+    if not out_path.exists():
+        return out_path
+    stem, suffix = out_path.stem, out_path.suffix
+    n = 2
+    while True:
+        cand = out_path.with_name(f"{stem}-{n}{suffix}")
+        if not cand.exists():
+            return cand
+        n += 1
+
+
+def detect_safety(analysis: dict) -> bool:
+    """True if any FR is safety-critical (no real frontend → banner required)."""
+    req = analysis.get("requirements", {})
+    frs = req.get("functionalRequirements", [])
+    if any(fr.get("safetyRelevance") == "安全相关" for fr in frs):
+        return True
+    text = req.get("title", "") + " " + " ".join(
+        (fr.get("name", "") or "") + " " + (fr.get("description", "") or "") for fr in frs
+    )
+    return any(h in text for h in SAFETY_HINTS)
 
 
 def analyze_fr_roles(frs):
@@ -134,12 +169,22 @@ def render_demo(analysis: dict, css_override: str = "") -> str:
     view_names = [v.get("name", f"视图{i+1}") for i, v in enumerate(roles["views"])]
     view_names_json = json.dumps(view_names, ensure_ascii=False)
 
+    # Safety detection → inject "阐述图" banner (safety systems have no real frontend)
+    is_safety = detect_safety(analysis)
+    safety_banner = """<div class="safety-banner">
+  <span class="icon">⚠️</span>
+  <span>安全功能阐述图 · 实际安全系统无操作前端界面</span>
+  <span class="sub">— 本页仅用于需求评审与理解，非产品界面交付物</span>
+</div>""" if is_safety else ""
+    safety_corner = '<div class="safety-corner">安全阐述图 · 非真实界面</div>' if is_safety else ""
+
     # CSS: default tokens + optional override from reference page
     css_block = DESIGN_TOKENS_CSS
     if css_override:
         css_block += "\n/* === Reference Page Override === */\n" + css_override
 
     vue_template = f"""<div id="app">
+{safety_banner}
 <header class="proto-header">
   <div style="display:flex;align-items:center;">
     <h1>{{{{ title }}}}</h1>
@@ -216,7 +261,8 @@ def render_demo(analysis: dict, css_override: str = "") -> str:
     </div>
   </div>
 </div>
-<footer class="proto-footer">scene-req-to-demo v0.0.3 · 业务系统前端原型</footer>
+<footer class="proto-footer">scene-req-to-demo v0.0.4 · 业务系统前端原型</footer>
+{safety_corner}
 </div>"""
 
     vue_logic = f"""const DATA = {json_str};
@@ -301,8 +347,11 @@ def main():
         title = analysis.get("requirements", {}).get("title", "未命名")
         title = title.replace(" ", "")
         suffix = args.suffix or ""
-        out_path = out_dir / f"{title}{suffix}.html"
+        out_path = _avoid_collision(out_dir / f"{title}{suffix}.html")
         out_path.write_text(html_text, encoding="utf-8")
+        fr_count = len(analysis.get("requirements", {}).get("functionalRequirements", []))
+        safety = "安全阐述图" if detect_safety(analysis) else "业务原型"
+        print(f"✓ 约束版 Demo [{safety}] 覆盖 {fr_count} 项 FR", file=sys.stderr)
         print(str(out_path))
     else:
         print(html_text)

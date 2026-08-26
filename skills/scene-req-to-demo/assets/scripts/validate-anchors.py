@@ -19,7 +19,10 @@ Output (stdout JSON):
         "6_section_completeness": "ok" | "warning: ...",
         "batch_dedup": "ok" | "warning: overlapping FRs ...",
         "demo_readiness": "ok" | "warning: <3 FRs",
-        "cove_consistency": "ok" | "warning: ..."
+        "cove_consistency": "ok" | "warning: ...",
+        "safety_and_acceptance": "ok" | "warning: ...",
+        "configurable_distribution": "ok" | "warning: ...",
+        "gap_discipline": "ok" | "warning: ..."
       },
       "errors": [...],
       "warnings": [...],
@@ -156,6 +159,70 @@ def check_demo_readiness(analysis):
     return warnings
 
 
+def check_safety_and_acceptance(analysis):
+    """Validate safetyRelevance + acceptanceCriteria fields (P1 FR extension)."""
+    warnings = []
+    frs = analysis.get("requirements", {}).get("functionalRequirements", [])
+
+    has_safety_field = any("safetyRelevance" in fr for fr in frs)
+    has_ac_field = any("acceptanceCriteria" in fr for fr in frs)
+
+    if frs and not has_safety_field:
+        warnings.append("no FR carries 'safetyRelevance' — mark each FR as 安全相关/非安全相关 (drives Demo safety banner)")
+    if frs and not has_ac_field:
+        warnings.append("no FR carries 'acceptanceCriteria' — add testable acceptance criteria per FR")
+
+    for fr in frs:
+        fid = fr.get("id", "?")
+        sr = fr.get("safetyRelevance")
+        if sr is not None and sr not in ("安全相关", "非安全相关"):
+            warnings.append(f"{fid}: safetyRelevance should be '安全相关' or '非安全相关', got '{sr}'")
+        # safety FR should not promise a concrete UI as its deliverable
+        if sr == "安全相关":
+            loc = fr.get("uiLocation", "")
+            if any(w in loc for w in ("页面", "界面", "弹窗", "大屏")):
+                warnings.append(f"{fid}: 安全相关 FR 的 uiLocation 指向界面 — 安全系统无操作前端，应为逻辑阐述（实际界面由非安全系统提供）")
+    return warnings
+
+
+def check_configurable_distribution(analysis):
+    """WorkBuddy P1-5: configurable 防摆设 — 全是 true 提示复核."""
+    warnings = []
+    frs = analysis.get("requirements", {}).get("functionalRequirements", [])
+    if len(frs) >= 3:
+        true_pct = sum(1 for fr in frs if fr.get("configurable") is True) / len(frs)
+        if true_pct >= 1.0:
+            warnings.append("100% FRs configurable=true — 复核是否有固定逻辑应为 false（可加 configReason 说明）")
+    return warnings
+
+
+def check_gap_discipline(analysis):
+    """GAP 纪律: 量化指标无来源标注 → 提示标 [假设]/[GAP]，防编造."""
+    import re
+    warnings = []
+    req = analysis.get("requirements", {})
+    frs = req.get("functionalRequirements", [])
+    nfrs = req.get("nonFunctionalRequirements", [])
+
+    # 量化指标模式：响应时间/百分比/次数/THR 等
+    metric_re = re.compile(r"(≤|>=?|＜|＞|<|>)\s*\d|(\d+(\.\d+)?\s*(%|％|s|秒|ms|毫秒|次|条|个))|10⁻|10\^-")
+
+    def scan(text, where):
+        if not isinstance(text, str):
+            return
+        if metric_re.search(text) and "[假设]" not in text and "[GAP]" not in text and "【假设】" not in text:
+            warnings.append(f"{where}: 含量化指标但未标 [假设]/[GAP] — 无依据的数值禁止编造，请标注来源或标 [假设]")
+
+    for fr in frs:
+        scan(fr.get("description", ""), f"{fr.get('id', '?')}.description")
+        scan(fr.get("example", ""), f"{fr.get('id', '?')}.example")
+    for i, nfr in enumerate(nfrs, 1):
+        scan(nfr, f"NFR-{i}")
+
+    # 去重：同类提示只保留前若干条
+    return warnings[:6]
+
+
 def main():
     try:
         input_data = json.load(sys.stdin)
@@ -193,6 +260,18 @@ def main():
     w = check_demo_readiness(analysis)
     all_warnings.extend(w)
     checks["demo_readiness"] = "ok" if not w else f"{len(w)} notes"
+
+    w = check_safety_and_acceptance(analysis)
+    all_warnings.extend(w)
+    checks["safety_and_acceptance"] = "ok" if not w else f"{len(w)} notes"
+
+    w = check_configurable_distribution(analysis)
+    all_warnings.extend(w)
+    checks["configurable_distribution"] = "ok" if not w else f"{len(w)} notes"
+
+    w = check_gap_discipline(analysis)
+    all_warnings.extend(w)
+    checks["gap_discipline"] = "ok" if not w else f"{len(w)} notes"
 
     if all_errors:
         status = "errors"

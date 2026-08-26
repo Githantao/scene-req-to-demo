@@ -23,6 +23,36 @@ from pathlib import Path
 
 PRIORITY_LABELS = {"high": "高优", "medium": "中优", "low": "低优"}
 
+SAFETY_HINTS = [
+    "联锁", "进路", "道岔", "闭塞", "防护", "故障导向安全", "故障-安全", "SIL",
+    "移动授权", "防护包络", "ATP", "ZC", "VOBC", "安全相关", "接近锁闭", "敌对进路",
+]
+
+
+def detect_safety(analysis: dict) -> bool:
+    """True if any FR is safety-critical."""
+    req = analysis.get("requirements", {})
+    frs = req.get("functionalRequirements", [])
+    if any(fr.get("safetyRelevance") == "安全相关" for fr in frs):
+        return True
+    text = req.get("title", "") + " " + " ".join(
+        (fr.get("name", "") or "") + " " + (fr.get("description", "") or "") for fr in frs
+    )
+    return any(h in text for h in SAFETY_HINTS)
+
+
+def _avoid_collision(out_path: Path) -> Path:
+    """If target exists, append -2, -3, ... to avoid overwriting (P1-8)."""
+    if not out_path.exists():
+        return out_path
+    stem, suffix = out_path.stem, out_path.suffix
+    n = 2
+    while True:
+        cand = out_path.with_name(f"{stem}-{n}{suffix}")
+        if not cand.exists():
+            return cand
+        n += 1
+
 
 def render_markdown(analysis: dict) -> str:
     bc = analysis.get("businessContext", {})
@@ -38,8 +68,15 @@ def render_markdown(analysis: dict) -> str:
     md = []
     md.append(f"# {req.get('title', '未命名系统')}需求文档")
     md.append("")
-    md.append(f"> 生成时间：{now} | 图表类型：{req.get('diagramType', 'flowchart')} | Skill: scene-req-to-demo v0.0.5")
+    md.append(f"> 生成时间：{now} | 图表类型：{req.get('diagramType', 'flowchart')} | Skill: scene-req-to-demo v0.0.4")
     md.append("")
+
+    if detect_safety(analysis):
+        md.append("> ⚠️ **安全功能需求声明**：本文档含安全苛求功能（联锁/防护类）。")
+        md.append("> 相关 FR 为**安全侧逻辑阐述**，安全系统本身无操作前端界面；")
+        md.append("> 文中/Demo 中出现的界面元素仅用于阐述与评审，实际操作界面由非安全系统（ATS/CTC 等）承载。")
+        md.append("")
+
     md.append("---")
     md.append("")
 
@@ -103,7 +140,9 @@ def render_markdown(analysis: dict) -> str:
     md.append("")
     for fr in frs:
         prio_label = PRIORITY_LABELS.get(fr.get("priority"), "中优")
-        md.append(f"### {fr.get('id', '?')} {fr.get('name', '')} `{prio_label}`")
+        sr = fr.get("safetyRelevance")
+        sr_badge = f" `{sr}`" if sr else ""
+        md.append(f"### {fr.get('id', '?')} {fr.get('name', '')} `{prio_label}`{sr_badge}")
         md.append("")
         md.append(fr.get("description", "待明确"))
         md.append("")
@@ -115,6 +154,8 @@ def render_markdown(analysis: dict) -> str:
         md.append(f"| ⚙️ 配置方式 | {cfg} |")
         md.append(f"| 🔘 默认状态 | {fr.get('defaultState', '待明确')} |")
         md.append(f"| 💡 示例 | {fr.get('example', '待明确')} |")
+        if fr.get("acceptanceCriteria"):
+            md.append(f"| ✅ 验收准则 | {fr.get('acceptanceCriteria')} |")
         md.append("")
     md.append("---")
     md.append("")
@@ -226,8 +267,11 @@ def main():
         out_dir.mkdir(parents=True, exist_ok=True)
         title = analysis.get("requirements", {}).get("title", "未命名")
         title = title.replace(" ", "")
-        out_path = out_dir / f"{title}.md"
+        out_path = _avoid_collision(out_dir / f"{title}.md")
         out_path.write_text(md_text, encoding="utf-8")
+        fr_count = len(analysis.get("requirements", {}).get("functionalRequirements", []))
+        safety = "含安全声明" if detect_safety(analysis) else "通用"
+        print(f"✓ Markdown 需求文档 [{safety}] 覆盖 {fr_count} 项 FR", file=sys.stderr)
         print(str(out_path))
     else:
         print(md_text)
