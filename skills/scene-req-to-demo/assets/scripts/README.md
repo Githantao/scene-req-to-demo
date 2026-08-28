@@ -2,6 +2,7 @@
 
 > **Read this FIRST** when this skill is triggered. This is the canonical execution path.
 > 脚本的 stdin/stdout 契约 + JSON schema 单一事实源 + 各阶段自检清单。**只读本文件即可正确调用全部脚本，无需打开脚本源码。**
+> v0.0.5rc1 调整：仅 `render-demo.py` 增 `communication` 子系统（关键词 / SUBSYSTEM_META / ZONE_TAXONOMY 三处同步），其他 4 脚本与 v0.0.5 字节级一致。
 
 ## TL;DR
 
@@ -37,7 +38,7 @@ cat input.json | python3 analyze.py
 - `status: "needs_correction"` — LLM must fix errors listed
 - `status: "duplicate_detected"` — overlaps with previous scenes, LLM should rename or merge
 - `domain_info.matched` — bool, if true load `assets/domain-railway.md` next
-- `domain_info.subsystem` — `safety | ats | ctc | monitoring | iom | general`，驱动安全标记与 Demo 布局
+- `domain_info.subsystem` — `safety | ats | ctc | monitoring | iom | communication | general`（v0.0.5rc1 增 communication），驱动安全标记与 Demo 布局
 - `domain_info.subsystem_confidence` — `high | medium | none`
 
 Also reads stdin without `analysis` field → returns `needs_llm_analysis` with domain detection.

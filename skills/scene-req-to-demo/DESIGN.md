@@ -3,7 +3,8 @@
 > **定位**：本文件是 skill 的**设计单一事实源**（source of truth），面向维护者。
 > 用于核对实现是否跑飞。与实现冲突时，以实现为准并回写本文件；改设计必须先改这里。
 > **非运行时资产**：agent 执行 pipeline 时不读本文件（运行时契约在 `SKILL.md` + `assets/scripts/README.md`）。
-> 版本：v0.0.5
+> 版本：v0.0.5rc1（v0.0.5 之后唯一一次设计调整：新增 communication 子系统）
+> **修改纪律（v0.0.5rc1 生效）**：任何代码改动之前，必须先在本文档 + `SKILL.md` + `assets/scripts/README.md` 留下设计意图。无设计即不动手。
 
 ---
 
@@ -43,9 +44,15 @@
 | `ctc` | 调度集中 | 两段式（CTC 分区拓扑） |
 | `monitoring` | 集中监测 | 两段式（监测分区拓扑） |
 | `iom` | 智能运维 | 两段式（IOM 分区拓扑） |
+| `communication` | 通信子系统运维（v0.0.5rc1 新增） | 两段式（通信分区拓扑） |
 | `general` | 通用 | 两段式（通用分区拓扑） |
 
-**检测优先级**：先判 `safety`（`detect_safety`），是则 safety；否则 `detect_subsystem` 在 ats/ctc/monitoring/iom/general 中按关键词计分取最高。
+**检测优先级**：先判 `safety`（`detect_safety`），是则 safety；否则 `detect_subsystem` 在 ats/ctc/monitoring/iom/communication/general 中按关键词计分取最高。
+
+**communication 子系统（v0.0.5rc1 新增）**：
+- 场景识别关键词：`通信 / 拓扑 / LTE / LTECore / 专用无线 / 高速数据网 / 网络视频 / 时钟同步 / 网元 / 端口 / 链路 / 下钻 / 机框 / 面板 / 告警`
+- ZONE 拓扑（11 个，type 限定在 v0.0.5 builder 集合内：`kpi/table/kanban/diagram/tree/list`）：告警综合看板 / 告警明细下钻 / 告警双视图 / 告警清除处置 / 运营期屏蔽 / 系统拓扑监视 / 设备下钻 / 链路端口连接 / 拓扑浮动标签 / 网元备注标签 / 非监控设备范围
+- 设计约束（防跑飞）：**ZONE type 必须从现有 `PROD_BUILDERS` 集合内选取**（v0.0.5 限定 10 个 type），引入新 type 必须**先在本文档声明 + 实现 builder**，禁止脚本用未声明 type。
 
 ### 2.3 安全标记（安全系统无前端）
 - 安全苛求系统（联锁/ATP/ZC/VOBC 等）**实际无操作前端**。
@@ -117,6 +124,11 @@
 
 > **已从依赖移除**：`prototype-styles-css.md`（内容是需求报告查看器样式，与原型脱节，创意版改由 LLM 自主实现）；`prototype-styles.md`（无引用索引）→ 删除。
 > **已删除**：`run.sh` / `standalone.sh`（功能重叠、不被 agent 工作流使用）。
+> **v0.0.5rc1 调整**：
+> - 渲染脚本（render-demo.py）增加 `communication` 子系统（关键词 / SUBSYSTEM_META / ZONE_TAXONOMY 同步新增）。
+> - 渲染脚本中 `detect_subsystem` 返回值从 5 子系统扩展为 6 子系统（新增 `communication`）。
+> - 其他 3 脚本（analyze / validate-anchors / render-markdown）**未动**，保持 v0.0.5 状态。
+> - 关键词表与 v0.0.5 完全一致（含 `iom` 关键词里的"工单"等泛词）——`通用工单审批` 场景可能误判为 iom 是已知行为；如需收窄需先在本文档写设计变更理由。
 
 ---
 
@@ -126,10 +138,19 @@
 
 - [ ] render-demo.py：safety → 阐述图+横幅；非安全 → 两段式（上范围+下效果）
 - [ ] render-demo.py：无旧单页布局残留（中央视图区/侧边栏/国铁段车间工班层级）
-- [ ] render-demo.py：ZONE_TAXONOMY 覆盖 ats/ctc/monitoring/iom/general
+- [ ] render-demo.py：ZONE_TAXONOMY 覆盖 ats/ctc/monitoring/iom/**communication**/general（v0.0.5rc1 增 communication）
+- [ ] render-demo.py：ZONE type 全部在 `PROD_BUILDERS` 声明的 10 个 type 内（v0.0.5rc1 约束：引入新 type 必须先设计后实现）
 - [ ] render-markdown.py：安全场景注入安全声明
 - [ ] analyze.py：detect_domain 返回 subsystem
 - [ ] validate-anchors.py：8 项检查齐全
 - [ ] build-creative.py：注入 Vue + node --check + 成功后删 .tpl.html
 - [ ] SKILL.md：Step6a 描述 = 两段式（非旧单页）；依赖不含 prototype-styles-css
 - [ ] 三处运行时位置软链到同一权威副本
+
+**v0.0.5rc1 验证（必须在提交前过一遍）**：
+- [ ] render-demo.py `detect_subsystem` 返回 6 个 subsystem（含 communication）
+- [ ] SUBSYSTEM_META 与 ZONE_TAXONOMY 中均含 `communication` 键
+- [ ] communication 关键词命中场景（"通信子系统拓扑监视告警"）路由到 communication，两段式正常渲染
+- [ ] 5 已知子系统（ats/ctc/monitoring/iom/general）行为与 v0.0.5 完全一致（无回归）
+- [ ] analyze.py / validate-anchors.py / render-markdown.py 与 v0.0.5 字节级一致
+- [ ] FR 软阈值 6 维持不变（v0.0.5rc1 不动 analyze/validate）

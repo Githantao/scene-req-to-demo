@@ -5,7 +5,7 @@ license: MIT
 compatibility: "Claude Code (~/.claude/skills, ~/.agents/skills), OpenCode (~/.config/opencode/skills, ~/.agents/skills), WorkBuddy (~/.workbuddy/skills), Amp (~/.config/amp/skills). Requires Python 3+."
 metadata:
   author: scene-req-to-demo
-  version: "0.0.5"
+  version: "0.0.5rc1"
   domain: requirements-engineering
 ---
 
@@ -98,7 +98,7 @@ python3 $SKILL_DIR/assets/scripts/analyze.py < ./output/<需求名称>.json
 ```
 
 - `status=needs_correction` → 修复 JSON 重跑。
-- `domain_info.matched=true` → 加载 `assets/domain-railway.md`，按 `domain_info.subsystem` 选章节（safety / ats / ctc / monitoring / iom）。
+- `domain_info.matched=true` → 加载 `assets/domain-railway.md`，按 `domain_info.subsystem` 选章节（safety / ats / ctc / monitoring / iom / communication — v0.0.5rc1 新增 communication）。
 - 记住 `domain_info.subsystem` — 它驱动 Step 6 的安全标记与布局选择。
 
 ### Step 3 — Batch confirmation ⚠️ MUST ASK
@@ -163,7 +163,7 @@ python3 $SKILL_DIR/assets/scripts/render-demo.py --output-dir ./output < ./outpu
 
 > ⚠️ `subsystem=safety` 时**跳过创意版**（安全系统无前端，只有约束版+阐述横幅）。
 
-对 ats / ctc / monitoring / iom / general，生成 `./output/<标题>-creative.html`：
+对 ats / ctc / monitoring / iom / communication / general，生成 `./output/<标题>-creative.html`：
 
 1. **专业下限**：按 `assets/prototype-domain-ui.md` 取对应子系统的界面骨架（布局/配色惯例）
 2. **技术灵感**：从 `assets/prototype-tech-inspiration.md` 挑 2-3 个契合的信息化趋势模式叠加（大屏/实时流/数字孪生/钻取/AI/可配置）

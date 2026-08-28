@@ -168,7 +168,7 @@ def detect_safety(analysis: dict) -> bool:
 
 def detect_subsystem(analysis: dict) -> str:
     """Classify the requirement into a non-safety subsystem for layout adaptation.
-    Returns: ats | ctc | monitoring | iom | general. (safety handled by detect_safety.)"""
+    Returns: ats | ctc | monitoring | iom | communication | general. (safety handled by detect_safety.)"""
     keywords = {
         "ats": ["ATS", "列车自动监控", "自动监控", "行车指挥", "调度员", "运行图", "时刻表",
                  "车次号", "自动排路", "站场图", "运行线", "扣车", "跳停", "行车调度", "调度大屏"],
@@ -179,6 +179,8 @@ def detect_subsystem(analysis: dict) -> str:
                  "设备监测", "状态监测", "模拟量", "开关量", "回放"],
         "iom": ["IOM", "智能运维", "综合运维", "运维管理", "设备台账", "检修", "维修", "工单",
                  "巡检", "检修计划", "备件", "库存", "健康评价", "健康管理", "PHM", "故障预测"],
+        "communication": ["通信", "拓扑", "LTE", "LTECore", "专用无线", "高速数据网", "网络视频", "网络视频平台",
+                 "时钟同步", "网元", "端口", "链路", "下钻", "机框", "面板", "告警"],
     }
     req = analysis.get("requirements", {})
     frs = req.get("functionalRequirements", [])
@@ -234,6 +236,15 @@ SUBSYSTEM_META = {
             ("专业", ["全部", "信号", "通信", "供电"]),
             ("状态", ["全部", "待处理", "处理中", "已闭环"]),
             ("时间", ["本月", "本季度", "本年"]),
+        ],
+    },
+    "communication": {
+        "role": "通信运维管理员",
+        "badge": "通信子系统运维 · 拓扑监视",
+        "toolbar": [
+            ("子系统", ["全部", "高速数据网", "专用无线LTECore", "网络视频平台", "时钟同步"]),
+            ("告警等级", ["全部", "运营故障", "运营风险", "设备异常"]),
+            ("时间", ["实时", "今日", "本周"]),
         ],
     },
     "general": {
@@ -314,6 +325,19 @@ ZONE_TAXONOMY = {
         {"name": "备件库存", "type": "table", "keywords": ["备件", "库存", "缺件", "库存预警", "备件管理"]},
         {"name": "统计大屏", "type": "kpi", "keywords": ["统计", "大屏", "报表", "指标", "综合展示"]},
         {"name": "施工卡控", "type": "table", "keywords": ["施工", "卡控", "登销记", "施工管理"]},
+     ],
+    "communication": [
+        {"name": "综合看板·告警分层分级指标", "type": "kpi", "keywords": ["看板", "指标", "三级", "分级", "KPI"]},
+        {"name": "告警明细列表（下钻）", "type": "table", "keywords": ["列表", "下钻", "明细", "等级"]},
+        {"name": "告警双视图（设备/告警维护）", "type": "table", "keywords": ["双视图", "维护", "视图"]},
+        {"name": "告警清除处置（单/批量）", "type": "kanban", "keywords": ["清除", "批量", "处置", "处理"]},
+        {"name": "运营期告警屏蔽", "type": "table", "keywords": ["屏蔽", "静默", "运营期"]},
+        {"name": "系统拓扑监视（四通信子系统）", "type": "diagram", "keywords": ["拓扑监视", "组网", "设备级", "系统拓扑"]},
+        {"name": "设备下钻·机框/面板/端口", "type": "tree", "keywords": ["下钻", "机框", "面板图"]},
+        {"name": "链路端口连接", "type": "diagram", "keywords": ["链路", "端口连接", "连线"]},
+        {"name": "拓扑浮动标签", "type": "kpi", "keywords": ["标签", "浮动", "标识"]},
+        {"name": "网元/单板/端口备注标签", "type": "table", "keywords": ["备注", "标签", "网元", "单板"]},
+        {"name": "非监控设备范围处理", "type": "list", "keywords": ["范围", "非监控", "纳入", "排除"]},
     ],
     "general": [
         {"name": "指标概览", "type": "kpi", "keywords": ["指标", "概览", "统计", "汇总"]},
